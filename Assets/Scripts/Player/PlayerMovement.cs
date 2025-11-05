@@ -8,7 +8,7 @@ public class PlayerMovement : MonoBehaviour
     public float runSpeed = 12f;
     public float crouchSpeed = 2f;
     public float jumpHeight = 2f;
-    public float gravity = -24f;
+    public float gravity = -32f;
 
     [Header("Crouch Settings")]
     public float crouchHeight = 0.99f;
@@ -29,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         originalHeight = controller.height;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
