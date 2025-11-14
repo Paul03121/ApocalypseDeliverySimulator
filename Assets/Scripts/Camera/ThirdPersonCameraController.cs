@@ -5,8 +5,8 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
     [Header("Camera Settings")]
     public float sensitivity = 100f;
     public Transform playerBody;
-    public float distance = 6f;
-    public float height = 1.8f;
+    public float distance = 5f;
+    public float height = 0.5f;
 
     [Header("Collision Settings")]
     public LayerMask collisionLayers;
@@ -22,9 +22,15 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
 
     void Start()
     {
-        Vector3 angles = transform.eulerAngles;
-        xRotation = angles.x;
-        yRotation = angles.y;
+        // Align camera rotation with player's forward direction at startup
+        Vector3 playerForward = playerBody.forward;
+        yRotation = Quaternion.LookRotation(playerForward).eulerAngles.y;
+
+        // Apply same logic as ResetCameraPosition to ensure correct starting position
+        Quaternion rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+        Vector3 offset = rotation * new Vector3(0f, height, distance);
+        transform.position = playerBody.position + offset;
+        transform.LookAt(playerBody.position + Vector3.up * height);
 
         currentCamPosition = transform.position;
     }

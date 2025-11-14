@@ -6,6 +6,9 @@ public class CameraSwitcher : MonoBehaviour
     public Camera firstPersonCamera;
     public Camera thirdPersonCamera;
 
+    [Header("Player Model (mesh root)")]
+    public GameObject playerBodyModel;
+
     [Header("Input Settings")]
     public KeyCode switchKey = KeyCode.V;
 
@@ -16,6 +19,8 @@ public class CameraSwitcher : MonoBehaviour
     {
         // Find the third person camera controller
         thirdPersonController = thirdPersonCamera.GetComponent<ThirdPersonFrontCameraController>();
+
+        // Initialize view state
         ActivateFirstPerson(isFirstPersonActive);
     }
 
@@ -30,10 +35,15 @@ public class CameraSwitcher : MonoBehaviour
 
     private void ActivateFirstPerson(bool activate)
     {
+        // Enable/disable cameras
         firstPersonCamera.gameObject.SetActive(activate);
         thirdPersonCamera.gameObject.SetActive(!activate);
 
-        // When switching to third person, reset its position
+        // Hide player model in first-person view
+        if (playerBodyModel != null)
+            playerBodyModel.SetActive(!activate);
+
+        // Reset third-person camera position when switching to third person
         if (!activate && thirdPersonController != null)
         {
             thirdPersonController.ResetCameraPosition();

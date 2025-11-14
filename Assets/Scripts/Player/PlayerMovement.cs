@@ -4,106 +4,113 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float walkSpeed = 6f;
-    public float runSpeed = 12f;
+    public float walkSpeed = 5f;
+    public float runSpeed = 9f;
     public float crouchSpeed = 2f;
-    public float jumpHeight = 2f;
-    public float gravity = -32f;
+    public float jumpHeight = 0.8f;
+    public float gravity = -18f;
 
     [Header("Crouch Settings")]
     public float crouchHeight = 0.99f;
     private float originalHeight;
     public float crouchTransitionSpeed = 20f;
 
-    [Header("Ground & Ceiling Check Settings")]
-    public float groundCheckDistance = 0.15f;
-    public float ceilingCheckDistance = 0.1f;
+    [Header("Ground Check Settings")]
+    public float groundCheckDistance = 0.2f;
+    public LayerMask groundMask;
 
     private CharacterController controller;
     private Vector3 velocity;
     private bool isCrouching = false;
     private bool isGrounded;
+    private bool wasGroundedLastFrame = false;
+
     private float currentSpeed;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
         originalHeight = controller.height;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
     void Update()
     {
-        HandleMovement();
+        GroundCheck();
         HandleCrouch();
-        HandleJump();
+        MovementAndJump();
     }
 
-    void HandleMovement()
+    void GroundCheck()
     {
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        // Ground check using a small sphere near the bottom of the capsule
+        Vector3 origin = transform.position + Vector3.down * (controller.height / 2 - controller.radius + 0.05f);
+        float sphereRadius = controller.radius * 0.50f;
+        isGrounded = Physics.CheckSphere(origin, sphereRadius, groundMask);
 
-        // Calculate movement direction
-        Vector3 move = transform.right * x + transform.forward * z;
-
-        // Determine current speed
-        bool isRunning = Input.GetKey(KeyCode.LeftShift) && !isCrouching;
-        currentSpeed = isRunning ? runSpeed : (isCrouching ? crouchSpeed : walkSpeed);
-
-        controller.Move(currentSpeed * Time.deltaTime * move);
+        // Reset vertical velocity when grounded
+        if (isGrounded && velocity.y < 0f)
+            velocity.y = -2f;
     }
 
     void HandleCrouch()
     {
-        // Detect attempt to toggle crouch state
+        // Toggle crouch
         if (Input.GetKeyDown(KeyCode.LeftControl))
             isCrouching = !isCrouching;
-
-        // Prevent standing if ceiling above while grounded
-        if (!isCrouching && isGrounded)
-        {
-            Vector3 rayOriginAbove = transform.position + Vector3.up * (controller.height / 2);
-            bool isBlockedAbove = Physics.Raycast(rayOriginAbove, Vector3.up, ceilingCheckDistance);
-
-            if (isBlockedAbove)
-            {
-                isCrouching = true;
-            }
-        }
 
         // Smooth height transition
         float targetHeight = isCrouching ? crouchHeight : originalHeight;
         controller.height = Mathf.Lerp(controller.height, targetHeight, Time.deltaTime * crouchTransitionSpeed);
     }
 
-    void HandleJump()
+    void MovementAndJump()
     {
-        // Ground check
-        Vector3 rayOrigin = transform.position + Vector3.down * (controller.height / 2 - 0.1f);
-        isGrounded = Physics.Raycast(rayOrigin, Vector3.down, groundCheckDistance);
+        // Read input
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
 
-        // Ceiling check
-        Vector3 rayOriginAbove = transform.position + Vector3.up * (controller.height / 2);
-        bool isBlockedAbove = Physics.Raycast(rayOriginAbove, Vector3.up, ceilingCheckDistance);
+        // Move direction
+        Vector3 move = transform.right * x + transform.forward * z;
 
-        // Reset vertical velocity when grounded
-        if (isGrounded && velocity.y < 0f)
-            velocity.y = -2f;
+        // Determine speed
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) && !isCrouching;
+        currentSpeed = isRunning ? runSpeed : (isCrouching ? crouchSpeed : walkSpeed);
 
-        // Cancel upward velocity if hitting a ceiling
-        if (isBlockedAbove && velocity.y > 0f)
-            velocity.y = 0f;
+        // Horizontal velocity
+        Vector3 horizontalVelocity = move * currentSpeed;
 
-        // Jump
-        if (Input.GetKey(KeyCode.Space) && isGrounded && !isCrouching)
+        // Jump logic
+        bool jumpPressed = Input.GetKeyDown(KeyCode.Space);
+        bool jumpHeld = Input.GetKey(KeyCode.Space);
+        bool justLanded = isGrounded && !wasGroundedLastFrame;
+
+        // Normal jump (GetKeyDown) OR auto-jump when landing while holding Space
+        if ((isGrounded && jumpPressed && !isCrouching) ||
+            (justLanded && jumpHeld && !isCrouching))
+        {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
 
         // Apply gravity
         velocity.y += gravity * Time.deltaTime;
 
-        // Vertical movement
-        controller.Move(Time.deltaTime * velocity.y * Vector3.up);
+        // Combine horizontal and vertical movement
+        controller.Move((horizontalVelocity + Vector3.up * velocity.y) * Time.deltaTime);
+
+        // Store grounded state for next frame
+        wasGroundedLastFrame = isGrounded;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (!controller) return;
+
+        // Visualize ground check sphere
+        Gizmos.color = Color.yellow;
+        Vector3 origin = transform.position + Vector3.down * (controller.height / 2 - controller.radius + 0.05f);
+        Gizmos.DrawWireSphere(origin, controller.radius * 0.35f);
     }
 }
