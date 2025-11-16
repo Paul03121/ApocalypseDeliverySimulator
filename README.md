@@ -5,14 +5,34 @@
 **Licencia:** Copyright © 2025 Paul Paredes Pincay. All rights reserved.
 
 ## Descripción
-Apocalypse Delivery Simulator es un videojuego tipo simulador con enfoque humorístico ambientado en un mundo postapocalíptico. 
-El jugador asume el rol de un repartidor anónimo que debe entregar productos en una ciudad destruida mientras enfrenta obstáculos absurdos y cómicos.
 
-## Tecnologías
-- Unity (versión 2022.3 LTS)
-- Blender (modelado de NPCs)
-- Audacity (edición de sonido)
-- Git / GitHub (control de versiones)
+Apocalypse Delivery Simulator es un videojuego de simulación humorística ambientado en un mundo postapocalíptico.
+
+El jugador controla a un repartidor anónimo que continúa realizando entregas incluso tras el colapso de la sociedad, enfrentándose a obstáculos absurdos, enemigos improvisados y rutas peligrosas.
+
+El proyecto forma parte del Trabajo Final de Grado (TFG) y busca combinar:
+
+* Mecánicas de entrega y gestión
+* Elementos ligeros de supervivencia
+* Un sistema de progresión y automatización
+* Humor moderado y estética low poly
 
 ## Estado del proyecto
-Etapa inicial – Preparación del entorno de desarrollo y documentación (PEC1).
+
+PEC2 – Prototipo jugable inicial.
+
+Actualmente se han implementado:
+
+* Movimiento básico del jugador
+* Sistema de cámara funcional
+* Entorno de pruebas para navegación
+* Primera arquitectura de scripts y assets
+
+La demo técnica puede descargarse desde la sección Releases.
+
+## Tecnologías
+
+* Unity 2022.3 LTS – Motor principal del juego
+* Blender – Modificación de personajes y modelado básico
+* Audacity – Edición de efectos sonoros
+* Git + GitHub – Control de versiones y distribución del binario
