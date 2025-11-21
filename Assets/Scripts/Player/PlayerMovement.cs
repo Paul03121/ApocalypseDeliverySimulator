@@ -16,7 +16,7 @@ public class PlayerMovement : MonoBehaviour
     public float crouchTransitionSpeed = 20f;
 
     [Header("Ground Check Settings")]
-    public float groundCheckDistance = 0.2f;
+    public float groundCheckRadius = 0.75f;
     public LayerMask groundMask;
 
     private CharacterController controller;
@@ -46,8 +46,8 @@ public class PlayerMovement : MonoBehaviour
     void GroundCheck()
     {
         // Ground check using a small sphere near the bottom of the capsule
-        Vector3 origin = transform.position + Vector3.down * (controller.height / 2 - controller.radius + 0.05f);
-        float sphereRadius = controller.radius * 0.50f;
+        Vector3 origin = transform.position + Vector3.down * (controller.height / 2f);
+        float sphereRadius = controller.radius * groundCheckRadius;
         isGrounded = Physics.CheckSphere(origin, sphereRadius, groundMask);
 
         // Reset vertical velocity when grounded
@@ -110,7 +110,7 @@ public class PlayerMovement : MonoBehaviour
 
         // Visualize ground check sphere
         Gizmos.color = Color.yellow;
-        Vector3 origin = transform.position + Vector3.down * (controller.height / 2 - controller.radius + 0.05f);
-        Gizmos.DrawWireSphere(origin, controller.radius * 0.35f);
+        Vector3 origin = transform.position + Vector3.down * (controller.height / 2f);
+        Gizmos.DrawWireSphere(origin, controller.radius * groundCheckRadius);
     }
 }
