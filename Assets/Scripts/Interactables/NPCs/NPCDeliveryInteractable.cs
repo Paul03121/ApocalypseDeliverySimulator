@@ -27,17 +27,9 @@ public class NPCDeliveryInteractable : Interactable
         }
 
         // Deliver the package
-        PackageHolder holder = FindObjectOfType<PackageHolder>();
-        if (holder != null && holder.IsHoldingPackage)
-        {
-            holder.Deliver();
-            player.ClearCarriedPackage();
+        carriedPackage.Deliver();
+        player.ClearCarriedPackage();
 
-            Debug.Log("Package delivered to NPC");
-        }
-        else
-        {
-            Debug.LogWarning("Player is not holding a valid package");
-        }
+        Debug.Log("Package delivered to NPC");
     }
 }

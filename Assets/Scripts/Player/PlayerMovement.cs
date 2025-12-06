@@ -5,22 +5,27 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float walkSpeed = 5f;
-    public float runSpeed = 9f;
+    public float runSpeed = 7f;
     public float crouchSpeed = 2f;
     public float jumpHeight = 0.8f;
     public float gravity = -18f;
 
     [Header("Crouch Settings")]
     public float crouchHeight = 0.99f;
-    private float originalHeight;
     public float crouchTransitionSpeed = 20f;
 
     [Header("Ground Check Settings")]
     public float groundCheckRadius = 0.75f;
     public LayerMask groundMask;
 
+    [Header("Movement Abilities Controllers")]
+    public bool runBlocked = false;
+    public bool jumpBlocked = false;
+    public bool crouchBlocked = false;
+
     private CharacterController controller;
     private Vector3 velocity;
+    private float originalHeight;
     private bool isCrouching = false;
     private bool isGrounded;
     private bool wasGroundedLastFrame = false;
@@ -31,9 +36,6 @@ public class PlayerMovement : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         originalHeight = controller.height;
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     void Update()
@@ -58,7 +60,7 @@ public class PlayerMovement : MonoBehaviour
     void HandleCrouch()
     {
         // Toggle crouch
-        if (Input.GetKeyDown(KeyCode.LeftControl))
+        if (!crouchBlocked && Input.GetKeyDown(KeyCode.LeftControl))
             isCrouching = !isCrouching;
 
         // Smooth height transition
@@ -76,7 +78,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 move = transform.right * x + transform.forward * z;
 
         // Determine speed
-        bool isRunning = Input.GetKey(KeyCode.LeftShift) && !isCrouching;
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) && !isCrouching && !runBlocked;
         currentSpeed = isRunning ? runSpeed : (isCrouching ? crouchSpeed : walkSpeed);
 
         // Horizontal velocity
@@ -88,8 +90,8 @@ public class PlayerMovement : MonoBehaviour
         bool justLanded = isGrounded && !wasGroundedLastFrame;
 
         // Normal jump (GetKeyDown) OR auto-jump when landing while holding Space
-        if ((isGrounded && jumpPressed && !isCrouching) ||
-            (justLanded && jumpHeld && !isCrouching))
+        if ((!jumpBlocked && isGrounded && jumpPressed && !isCrouching) ||
+            (!jumpBlocked && justLanded && jumpHeld && !isCrouching))
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
