@@ -40,6 +40,10 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // Stop working if game is paused or if player died
+        if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
+            return;
+
         GroundCheck();
         HandleCrouch();
         MovementAndJump();

@@ -11,6 +11,10 @@ public class FirstPersonCameraController : MonoBehaviour
 
     void Update()
     {
+        // Stop working if game is paused or if player died
+        if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
+            return;
+
         // Mouse input
         float mouseX = Input.GetAxis("Mouse X") * sensitivity * sensitivityMultiplier;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivity * sensitivityMultiplier;

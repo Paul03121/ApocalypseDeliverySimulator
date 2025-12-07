@@ -21,6 +21,11 @@ public class PlayerInteraction : MonoBehaviour
     void Update()
     {
         DetectInteractables();
+
+        // Stop working if game is paused or if player died
+        if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
+            return;
+
         HandleInteractionInput();
         HandleDropInput();
         HandleEquipInput();

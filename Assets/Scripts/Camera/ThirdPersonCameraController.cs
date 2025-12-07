@@ -37,6 +37,10 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
 
     void LateUpdate()
     {
+        // Stop working if game is paused or if player died
+        if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
+            return;
+
         // Read mouse input
         float mouseX = Input.GetAxis("Mouse X") * sensitivity * sensitivityMultiplier;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivity * sensitivityMultiplier;

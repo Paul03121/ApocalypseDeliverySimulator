@@ -13,6 +13,10 @@ public class PlayerAttack : MonoBehaviour
 
     void Update()
     {
+        // Stop working if game is paused or if player died
+        if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
+            return;
+
         // If no weapon holder is available or no weapon is equipped
         if (weaponHolder == null || !weaponHolder.IsWeaponEquipped)
             return;

@@ -26,6 +26,10 @@ public class CameraSwitcher : MonoBehaviour
 
     void Update()
     {
+        // Stop working if game is paused or if player died
+        if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
+            return;
+
         if (Input.GetKeyDown(switchKey))
         {
             isFirstPersonActive = !isFirstPersonActive;
