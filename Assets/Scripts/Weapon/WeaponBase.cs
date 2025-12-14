@@ -10,6 +10,11 @@ public abstract class WeaponBase : MonoBehaviour
 
     protected float nextAttackTime = 0f;
 
+    [Header("UI")]
+    [SerializeField] private Sprite iconSprite;
+
+    public Sprite IconSprite => iconSprite;
+
     public virtual bool CanAttack()
     {
         return Time.time >= nextAttackTime;

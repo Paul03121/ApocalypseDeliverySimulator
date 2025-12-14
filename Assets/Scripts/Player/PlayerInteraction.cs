@@ -12,6 +12,8 @@ public class PlayerInteraction : MonoBehaviour
     private Transform player;                   // Cached player transform
     private Camera playerCamera;                // Cached first person camera
 
+    [SerializeField] private WeaponIconUI weaponIconUI; // Show or hide weapon icon
+
     void Start()
     {
         player = transform;
@@ -91,6 +93,14 @@ public class PlayerInteraction : MonoBehaviour
             if (currentClosest is WeaponInteractable wpn && wpn.isBeingHeld)
             {
                 SetCarriedWeapon(wpn);
+
+                WeaponBase weaponBase = wpn.GetComponent<WeaponBase>();
+                if (weaponBase == null)
+                {
+                    Debug.LogError("WeaponInteractable no tiene un componente WeaponBase.");
+                    return;
+                }
+                weaponIconUI.UpdateWeaponIcon(weaponBase, true, true);
             }
         }
     }
@@ -118,6 +128,7 @@ public class PlayerInteraction : MonoBehaviour
                 {
                     carriedWeapon.Drop();
                     ClearCarriedWeapon();
+                    weaponIconUI.UpdateWeaponIcon(null, false, false);
                 }
             }
         }
@@ -135,6 +146,9 @@ public class PlayerInteraction : MonoBehaviour
             if (carriedWeapon.isBeingHeld)
             {
                 carriedWeapon.UnequipWeapon();
+
+                WeaponBase weaponBase = carriedWeapon.GetComponent<WeaponBase>();
+                weaponIconUI.UpdateWeaponIcon(weaponBase, true, false);
                 return;
             }
 
@@ -147,6 +161,9 @@ public class PlayerInteraction : MonoBehaviour
                     return;
                 }
                 carriedWeapon.EquipWeapon();
+
+                WeaponBase weaponBase = carriedWeapon.GetComponent<WeaponBase>();
+                weaponIconUI.UpdateWeaponIcon(weaponBase, true, true);
                 return;
             }
         }
@@ -279,5 +296,6 @@ public class PlayerInteraction : MonoBehaviour
     public void ClearCarriedWeapon()
     {
         carriedWeapon = null;
+        weaponIconUI.UpdateWeaponIcon(null, false, false);
     }
 }
