@@ -71,11 +71,9 @@ public class PlayerHealth : MonoBehaviour
     {
         Debug.Log("Player has died.");
 
+        // TODO: Trigger death animation
+
         // Notify any listeners (GameManager, UI, etc.)
         OnPlayerDeath?.Invoke();
-
-        // TODO: Trigger death animation
-        // TODO: Disable player movement + interactions
-        // TODO: Call respawn logic in a GameManager
     }
 }
