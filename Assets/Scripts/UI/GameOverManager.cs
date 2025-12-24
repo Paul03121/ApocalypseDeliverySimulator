@@ -3,21 +3,18 @@ using UnityEngine.SceneManagement;
 
 public class GameOverManager : MonoBehaviour
 {
-    public GameObject gameOverUI;
     public PlayerHealth playerHealth;
 
     private void Start()
     {
-        gameOverUI.SetActive(false);
-
         // Subscribe to the player death event
         playerHealth.OnPlayerDeath += ShowGameOver;
     }
 
     private void ShowGameOver()
     {
+        // Switch game to Game Over state
         GameStateManager.Instance.SetState(GameState.GameOver);
-        gameOverUI.SetActive(true);
     }
 
     public void Retry()

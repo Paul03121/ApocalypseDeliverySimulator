@@ -37,8 +37,8 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
 
     void LateUpdate()
     {
-        // Stop working if game is paused or if player died
-        if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
+        // Stop working if game is not in Gameplay mode
+        if (!GameStateManager.Instance.IsGameplay)
             return;
 
         // Read mouse input

@@ -10,6 +10,9 @@ public class PlayerMovement : MonoBehaviour
     public float jumpHeight = 0.8f;
     public float gravity = -18f;
 
+    [Header("Speed Modifiers")]
+    private float speedBonus = 0f;
+
     [Header("Crouch Settings")]
     public float crouchHeight = 0.99f;
     public float crouchTransitionSpeed = 20f;
@@ -31,6 +34,11 @@ public class PlayerMovement : MonoBehaviour
     private bool wasGroundedLastFrame = false;
 
     private float currentSpeed;
+
+    public float WalkSpeed => walkSpeed + speedBonus;
+    public float RunSpeed => runSpeed + speedBonus;
+    public float CrouchSpeed => crouchSpeed + speedBonus;
+
 
     void Start()
     {
@@ -83,7 +91,7 @@ public class PlayerMovement : MonoBehaviour
 
         // Determine speed
         bool isRunning = Input.GetKey(KeyCode.LeftShift) && !isCrouching && !runBlocked;
-        currentSpeed = isRunning ? runSpeed : (isCrouching ? crouchSpeed : walkSpeed);
+        currentSpeed = isRunning ? RunSpeed : (isCrouching ? CrouchSpeed : WalkSpeed);
 
         // Horizontal velocity
         Vector3 horizontalVelocity = move * currentSpeed;
@@ -108,6 +116,17 @@ public class PlayerMovement : MonoBehaviour
 
         // Store grounded state for next frame
         wasGroundedLastFrame = isGrounded;
+    }
+
+    public void AddSpeedBonus(float amount)
+    {
+        speedBonus += amount;
+    }
+
+    public void RemoveSpeedBonus(float amount)
+    {
+        speedBonus -= amount;
+        speedBonus = Mathf.Max(0, speedBonus);
     }
 
     void OnDrawGizmosSelected()
