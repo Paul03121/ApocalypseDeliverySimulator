@@ -9,6 +9,7 @@ public class UIManager : MonoBehaviour
     public GameObject pauseUI;
     public GameObject inventoryUI;
     public GameObject shopUI;
+    public GameObject deliveryResultUI;
     public GameObject gameOverUI;
 
     private void Awake()
@@ -48,6 +49,13 @@ public class UIManager : MonoBehaviour
     {
         if (shopUI != null)
             shopUI.SetActive(value);
+    }
+
+    // Enable or disable the Delivery Result UI
+    public void ShowDeliveryResultUI(bool value)
+    {
+        if (deliveryResultUI != null)
+            deliveryResultUI.SetActive(value);
     }
 
     // Enable or disable the Game Over UI

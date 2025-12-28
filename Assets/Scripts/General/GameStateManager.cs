@@ -6,6 +6,7 @@ public enum GameState
     Paused,
     Inventory,
     Shop,
+    DeliveryResult,
     GameOver
 }
 
@@ -69,6 +70,7 @@ public class GameStateManager : MonoBehaviour
                 UIManager.Instance.ShowPauseUI(false);
                 UIManager.Instance.ShowInventoryUI(false);
                 UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(false);
                 UIManager.Instance.ShowGameOverUI(false);
                 break;
 
@@ -79,6 +81,7 @@ public class GameStateManager : MonoBehaviour
                 UIManager.Instance.ShowPauseUI(true);
                 UIManager.Instance.ShowInventoryUI(false);
                 UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(false);
                 UIManager.Instance.ShowGameOverUI(false);
                 break;
 
@@ -89,6 +92,7 @@ public class GameStateManager : MonoBehaviour
                 UIManager.Instance.ShowPauseUI(false);
                 UIManager.Instance.ShowInventoryUI(true);
                 UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(false);
                 UIManager.Instance.ShowGameOverUI(false);
                 break;
 
@@ -99,6 +103,18 @@ public class GameStateManager : MonoBehaviour
                 UIManager.Instance.ShowPauseUI(false);
                 UIManager.Instance.ShowInventoryUI(false);
                 UIManager.Instance.ShowShopUI(true);
+                UIManager.Instance.ShowDeliveryResultUI(false);
+                UIManager.Instance.ShowGameOverUI(false);
+                break;
+
+            case GameState.DeliveryResult:
+                ApplyNonGameplaySettings();
+
+                UIManager.Instance.ShowGameplayUI(false);
+                UIManager.Instance.ShowPauseUI(false);
+                UIManager.Instance.ShowInventoryUI(false);
+                UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(true);
                 UIManager.Instance.ShowGameOverUI(false);
                 break;
 
@@ -109,6 +125,7 @@ public class GameStateManager : MonoBehaviour
                 UIManager.Instance.ShowPauseUI(false);
                 UIManager.Instance.ShowInventoryUI(false);
                 UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(false);
                 UIManager.Instance.ShowGameOverUI(true);
                 break;
         }
@@ -135,5 +152,6 @@ public class GameStateManager : MonoBehaviour
     public bool IsPaused => CurrentState == GameState.Paused;
     public bool IsInventory => CurrentState == GameState.Inventory;
     public bool IsShop => CurrentState == GameState.Shop;
+    public bool IsDeliveryResult => CurrentState == GameState.DeliveryResult;
     public bool IsGameOver => CurrentState == GameState.GameOver;
 }

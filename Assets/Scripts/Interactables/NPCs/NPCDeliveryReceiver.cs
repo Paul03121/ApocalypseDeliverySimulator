@@ -1,0 +1,32 @@
+using UnityEngine;
+
+public class NPCDeliveryReceiver : Interactable
+{
+    private DeliveryMission mission;
+
+    public void AssignMission(DeliveryMission mission)
+    {
+        this.mission = mission;
+    }
+
+    protected override void OnInteract()
+    {
+        isInteracted = false;
+
+        // Get player interaction component and package being carried
+        var player = FindObjectOfType<PlayerInteraction>();
+        var carried = player.GetCarriedPackage();
+
+        // Only proceed if player carries the package assigned to the mission
+        if (carried != mission.package)
+            return;
+
+        // Deliver the package
+        carried.Deliver();
+        player.ClearCarriedPackage();
+
+        mission.NotifyDelivered();
+
+        Destroy(gameObject);
+    }
+}

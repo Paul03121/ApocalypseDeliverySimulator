@@ -3,10 +3,25 @@ using UnityEngine;
 public class PackageInteractable : Interactable
 {
     [Header("State")]
-    public bool isBeingHeld = false;        // Tracks whether the package is currently being held
+    public bool isBeingHeld = false;
 
-    private PackageHolder holder;           // Cached reference to the PackageHolder
-    private IPackageModule[] modules;       // Package modules
+    [Header("Damage")]
+    private int hitsReceived;
+    private bool isDamaged = false;
+
+    [Header("References")]
+    private PackageHolder holder;
+    private PlayerHealth playerHealth;
+    private float lastPlayerHealth;
+
+    private bool isSubscribed = false;
+
+    private IPackageModule[] modules;
+
+    public int HitsReceived => hitsReceived;
+    public bool IsDamaged => isDamaged;
+
+    public event System.Action<int> OnHitReceived;
 
     protected override void Awake()
     {
@@ -44,12 +59,11 @@ public class PackageInteractable : Interactable
 
         // TODO: Add pickup sound effect
 
+        SubscribeToDamage();
         holder.PickUp(this);
 
         // Notify modules
         NotifyPickedUp();
-
-        Debug.Log("Package picked up");
     }
 
     public void Drop()
@@ -59,12 +73,11 @@ public class PackageInteractable : Interactable
 
         // TODO: Add drop sound effect
 
+        UnsubscribeFromDamage();
         holder.Drop();
 
         // Notify modules
         NotifyDropped();
-
-        Debug.Log("Package dropped");
     }
 
     public void Deliver()
@@ -74,6 +87,7 @@ public class PackageInteractable : Interactable
 
         // TODO: Add delivered sound effect
 
+        UnsubscribeFromDamage();
         holder.Deliver();
 
         // Notify modules
@@ -96,5 +110,86 @@ public class PackageInteractable : Interactable
     {
         foreach (var module in modules)
             module.OnPackageDelivered(this);
+    }
+
+    private void SubscribeToDamage()
+    {
+        if (isSubscribed)
+            return;
+
+        // Find player health component
+        if (playerHealth == null)
+            playerHealth = FindObjectOfType<PlayerHealth>();
+
+        if (playerHealth == null)
+        {
+            Debug.LogError("[Package] PlayerHealth not found");
+            return;
+        }
+
+        // Subscribe to health change events to detect damage
+        lastPlayerHealth = playerHealth.CurrentHealth;
+        playerHealth.OnHealthChanged += OnDamageReceived;
+        isSubscribed = true;
+    }
+
+    private void UnsubscribeFromDamage()
+    {
+        if (!isSubscribed || playerHealth == null)
+            return;
+
+        playerHealth.OnHealthChanged -= OnDamageReceived;
+        isSubscribed = false;
+    }
+
+    private void OnDamageReceived(float current, float max)
+    {
+        if (!isBeingHeld)
+            return;
+
+        // If player health decreased, register a hit on the package
+        if (current < lastPlayerHealth)
+        {
+            RegisterHit();
+        }
+
+        lastPlayerHealth = current;
+    }
+
+    public void RegisterHit()
+    {
+        if(isDamaged)
+            return;
+
+        hitsReceived++;
+
+        // TODO: Play damage sound
+
+        OnHitReceived?.Invoke(hitsReceived);
+
+        // Mark as damaged after 10 hits
+        if (hitsReceived >= 10)
+            MarkDamaged();
+    }
+
+    public void MarkDamaged()
+    {
+        if (isDamaged)
+            return;
+
+        isDamaged = true;
+
+        Debug.LogWarning("[Package] Package contents damaged");
+
+        // TODO: Swap to damaged model
+    }
+
+    public float GetIntegrity()
+    {
+        if (isDamaged)
+            return 0f;
+
+        // Calculate integrity as percentage based on hits (1 hit = -10%)
+        return Mathf.Clamp01(1f - hitsReceived * 0.1f);
     }
 }

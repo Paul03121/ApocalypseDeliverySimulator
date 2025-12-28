@@ -2,55 +2,49 @@ using UnityEngine;
 
 public class PerishablePackageModule : MonoBehaviour, IPackageModule
 {
-    [SerializeField] private float maxDuration = 10f;
-
+    [Header("Timing")]
+    [SerializeField] private float maxDuration = 180f;      // Damage the package after 3 minutes
     private float timer = 0f;
-    private bool timerStarted = false;
-    private bool isExpired = false;
+    private bool timerRunning = false;
 
     private PackageInteractable package;
 
     public void Initialize(PackageInteractable pkg)
     {
         package = pkg;
-    }
 
-    public void OnPackagePickedUp(PackageInteractable package)
-    {
-        // Start timer only the first time the package is picked up
-        if (!timerStarted)
+        // Start timer when package is generated
+        if (!timerRunning)
         {
-            timerStarted = true;
+            timerRunning = true;
             timer = 0f;
             Debug.Log("[PerishableModule] Timer started.");
         }
     }
+
+    public void OnPackagePickedUp(PackageInteractable package) { }
 
     public void OnPackageDropped(PackageInteractable package) { }
 
     public void OnPackageDelivered(PackageInteractable package)
     {
         // Stop updating the timer
-        timerStarted = false;
+        timerRunning = false;
     }
 
     private void Update()
     {
-        if (!timerStarted || isExpired)
+        if (!timerRunning || package.IsDamaged)
             return;
 
         // Accumulate elapsed time
         timer += Time.deltaTime;
 
-        // Check if the expiration time has been reached
+        // Check if the max duration time has been reached
         if (timer >= maxDuration)
         {
             Debug.LogWarning("[PerishableModule] Perishable package expired!");
-            isExpired = true;
-
-            // Destroy the package after expiration
-            if (package != null)
-                Destroy(package.gameObject);
+            package.MarkDamaged();
         }
     }
 }
