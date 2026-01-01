@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8381658490577172803}
   - component: {fileID: 3588059398290617620}
   - component: {fileID: 6141264075354258406}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Fragile_Package
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -88,10 +88,6 @@ public class DeliveryResultUIManager : MonoBehaviour
         // Apply reward to the player
         wallet.AddMoney(mission.FinalReward);
 
-        // Mark mission as completed
-        mission.Complete();
-        DeliveryManager.Instance.CompleteMission(mission);
-
         // Return game to gameplay state
         GameStateManager.Instance.SetState(GameState.Gameplay);
     }

@@ -3,26 +3,29 @@ using UnityEngine;
 public class EnemySpawner : MonoBehaviour
 {
     [Header("Spawner Settings")]
-    public GameObject enemyPrefab;
-    public float respawnDelay = 180f;      // Time required before this spawner is allowed to spawn again
-    public float minPlayerDistance = 15f;  // Minimum distance the player must be from the spawner
+    [SerializeField] private GameObject enemyPrefab;
+    [SerializeField] private float respawnDelay = 180f;         // Time required before this spawner is allowed to spawn again
+    [SerializeField] private float minPlayerDistance = 15f;     // Minimum distance the player must be from the spawner
+    [SerializeField] private float maxPlayerDistance = 100f;    // Maximum distance the player can be from the spawner
 
-    private GameObject currentEnemy;       // Reference to the currently spawned enemy
-    private float lastSpawnTime = -999f;   // Time when the last enemy was spawned
+    private GameObject currentEnemy;                            // Reference to the currently spawned enemy
+    private float lastSpawnTime = -999f;                        // Time when the last enemy was spawned
 
     private Transform player;
 
     private void Start()
     {
         // Locate the player in the scene
-        player = GameObject.FindWithTag("Player")?.transform;
+        GameObject playerObject = GameObject.FindWithTag("Player");
 
-        if (player == null)
+        if (playerObject == null)
         {
             Debug.LogError("Player not found by EnemySpawner");
             enabled = false;
             return;
         }
+
+        player = playerObject.transform;
 
         TrySpawn(); // Attempt initial spawn
     }
@@ -35,13 +38,17 @@ public class EnemySpawner : MonoBehaviour
     private void TrySpawn()
     {
         // Do not spawn if an enemy is already active
-        if (currentEnemy != null) return;
+        if (currentEnemy != null)
+            return;
 
         // Respect the respawn cooldown
-        if (Time.time - lastSpawnTime < respawnDelay) return;
+        if (Time.time - lastSpawnTime < respawnDelay)
+            return;
 
-        // Prevent spawning if the player is too close
-        if (Vector3.Distance(transform.position, player.position) < minPlayerDistance) return;
+        // Prevent spawning if the player is outside the valid spawn distance range
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        if (distanceToPlayer < minPlayerDistance || distanceToPlayer > maxPlayerDistance)
+            return;
 
         SpawnEnemy();
     }
@@ -53,8 +60,7 @@ public class EnemySpawner : MonoBehaviour
         lastSpawnTime = Time.time;
 
         // Subscribe to the enemy's death event to know when to free the spawner
-        EnemyBase enemy = currentEnemy.GetComponent<EnemyBase>();
-        if (enemy != null)
+        if (currentEnemy.TryGetComponent<EnemyBase>(out var enemy))
             enemy.OnDeath += HandleEnemyDeath;
     }
 

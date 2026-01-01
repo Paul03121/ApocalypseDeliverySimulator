@@ -768,7 +768,7 @@ GameObject:
   - component: {fileID: 6722047187136968026}
   - component: {fileID: 5188265755447230768}
   - component: {fileID: 6344227924599937873}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: DeliveryGiver_TutorialStep1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -848,6 +848,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconController: {fileID: 0}
+  flag: 0
   packagePrefabs:
   - {fileID: 2502037475432627411, guid: db15882c088b9384a9465d8e49b7442e, type: 3}
 --- !u!1 &3336399013033042440

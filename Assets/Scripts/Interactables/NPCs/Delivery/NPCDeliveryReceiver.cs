@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class NPCDeliveryReceiver : Interactable
 {
+    public DeliveryFlag flag;
+
     private DeliveryMission mission;
 
     public void AssignMission(DeliveryMission mission)
@@ -25,7 +27,8 @@ public class NPCDeliveryReceiver : Interactable
         carried.Deliver();
         player.ClearCarriedPackage();
 
-        mission.NotifyDelivered();
+        // Complete the mission
+        DeliveryManager.Instance.CompleteMission(mission);
 
         Destroy(gameObject);
     }

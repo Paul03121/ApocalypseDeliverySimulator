@@ -6,6 +6,11 @@ public class NPCShopkeeper : Interactable
     [Header("Shop Items")]
     public List<InventoryItem> itemsForSale;
 
+    private void Start()
+    {
+        MapUIManager.Instance.RegisterShop(this, transform);
+    }
+
     protected override void OnInteract()
     {
         isInteracted = false;

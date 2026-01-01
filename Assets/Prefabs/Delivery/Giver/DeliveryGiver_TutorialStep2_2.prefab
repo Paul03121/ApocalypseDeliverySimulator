@@ -1680,8 +1680,8 @@ GameObject:
   - component: {fileID: 7846289354646067276}
   - component: {fileID: 1286123474620509376}
   - component: {fileID: 1940110566594255534}
-  m_Layer: 0
-  m_Name: DeliveryGiver_TutorialStep3
+  m_Layer: 7
+  m_Name: DeliveryGiver_TutorialStep2_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1760,7 +1760,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconController: {fileID: 0}
-  flag: 2
+  flag: 1
   packagePrefabs:
   - {fileID: 8571525282877287095, guid: 229ebe10ad821b341a9b4b6449c0e16a, type: 3}
 --- !u!1 &6891862537299593179

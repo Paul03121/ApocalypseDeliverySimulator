@@ -4,10 +4,11 @@ public enum GameState
 {
     Gameplay,
     Paused,
+    GameOver,
     Inventory,
+    Map,
     Shop,
-    DeliveryResult,
-    GameOver
+    DeliveryResult
 }
 
 public class GameStateManager : MonoBehaviour
@@ -68,10 +69,11 @@ public class GameStateManager : MonoBehaviour
 
                 UIManager.Instance.ShowGameplayUI(true);
                 UIManager.Instance.ShowPauseUI(false);
+                UIManager.Instance.ShowGameOverUI(false);
                 UIManager.Instance.ShowInventoryUI(false);
+                UIManager.Instance.ShowMapUI(false);
                 UIManager.Instance.ShowShopUI(false);
                 UIManager.Instance.ShowDeliveryResultUI(false);
-                UIManager.Instance.ShowGameOverUI(false);
                 break;
 
             case GameState.Paused:
@@ -79,43 +81,11 @@ public class GameStateManager : MonoBehaviour
 
                 UIManager.Instance.ShowGameplayUI(false);
                 UIManager.Instance.ShowPauseUI(true);
+                UIManager.Instance.ShowGameOverUI(false);
                 UIManager.Instance.ShowInventoryUI(false);
+                UIManager.Instance.ShowMapUI(false);
                 UIManager.Instance.ShowShopUI(false);
                 UIManager.Instance.ShowDeliveryResultUI(false);
-                UIManager.Instance.ShowGameOverUI(false);
-                break;
-
-            case GameState.Inventory:
-                ApplyNonGameplaySettings();
-
-                UIManager.Instance.ShowGameplayUI(false);
-                UIManager.Instance.ShowPauseUI(false);
-                UIManager.Instance.ShowInventoryUI(true);
-                UIManager.Instance.ShowShopUI(false);
-                UIManager.Instance.ShowDeliveryResultUI(false);
-                UIManager.Instance.ShowGameOverUI(false);
-                break;
-
-            case GameState.Shop:
-                ApplyNonGameplaySettings();
-
-                UIManager.Instance.ShowGameplayUI(false);
-                UIManager.Instance.ShowPauseUI(false);
-                UIManager.Instance.ShowInventoryUI(false);
-                UIManager.Instance.ShowShopUI(true);
-                UIManager.Instance.ShowDeliveryResultUI(false);
-                UIManager.Instance.ShowGameOverUI(false);
-                break;
-
-            case GameState.DeliveryResult:
-                ApplyNonGameplaySettings();
-
-                UIManager.Instance.ShowGameplayUI(false);
-                UIManager.Instance.ShowPauseUI(false);
-                UIManager.Instance.ShowInventoryUI(false);
-                UIManager.Instance.ShowShopUI(false);
-                UIManager.Instance.ShowDeliveryResultUI(true);
-                UIManager.Instance.ShowGameOverUI(false);
                 break;
 
             case GameState.GameOver:
@@ -123,10 +93,59 @@ public class GameStateManager : MonoBehaviour
 
                 UIManager.Instance.ShowGameplayUI(false);
                 UIManager.Instance.ShowPauseUI(false);
+                UIManager.Instance.ShowGameOverUI(true);
                 UIManager.Instance.ShowInventoryUI(false);
+                UIManager.Instance.ShowMapUI(false);
                 UIManager.Instance.ShowShopUI(false);
                 UIManager.Instance.ShowDeliveryResultUI(false);
-                UIManager.Instance.ShowGameOverUI(true);
+                break;
+
+            case GameState.Inventory:
+                ApplyNonGameplaySettings();
+
+                UIManager.Instance.ShowGameplayUI(false);
+                UIManager.Instance.ShowPauseUI(false);
+                UIManager.Instance.ShowGameOverUI(false);
+                UIManager.Instance.ShowInventoryUI(true);
+                UIManager.Instance.ShowMapUI(false);
+                UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(false);
+                break;
+
+            case GameState.Map:
+                ApplyNonGameplaySettings();
+
+                UIManager.Instance.ShowGameplayUI(false);
+                UIManager.Instance.ShowPauseUI(false);
+                UIManager.Instance.ShowGameOverUI(false);
+                UIManager.Instance.ShowInventoryUI(false);
+                UIManager.Instance.ShowMapUI(true);
+                UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(false);
+                break;
+
+            case GameState.Shop:
+                ApplyNonGameplaySettings();
+
+                UIManager.Instance.ShowGameplayUI(false);
+                UIManager.Instance.ShowPauseUI(false);
+                UIManager.Instance.ShowGameOverUI(false);
+                UIManager.Instance.ShowInventoryUI(false);
+                UIManager.Instance.ShowMapUI(false);
+                UIManager.Instance.ShowShopUI(true);
+                UIManager.Instance.ShowDeliveryResultUI(false);
+                break;
+
+            case GameState.DeliveryResult:
+                ApplyNonGameplaySettings();
+
+                UIManager.Instance.ShowGameplayUI(false);
+                UIManager.Instance.ShowPauseUI(false);
+                UIManager.Instance.ShowGameOverUI(false);
+                UIManager.Instance.ShowInventoryUI(false);
+                UIManager.Instance.ShowMapUI(false);
+                UIManager.Instance.ShowShopUI(false);
+                UIManager.Instance.ShowDeliveryResultUI(true);
                 break;
         }
     }
@@ -139,7 +158,7 @@ public class GameStateManager : MonoBehaviour
         Cursor.visible = false;
     }
 
-    // Shared  Non-Gameplay settings
+    // Shared Non-Gameplay settings
     private void ApplyNonGameplaySettings()
     {
         Time.timeScale = 0f;
@@ -150,8 +169,9 @@ public class GameStateManager : MonoBehaviour
     // State checks
     public bool IsGameplay => CurrentState == GameState.Gameplay;
     public bool IsPaused => CurrentState == GameState.Paused;
+    public bool IsGameOver => CurrentState == GameState.GameOver;
     public bool IsInventory => CurrentState == GameState.Inventory;
+    public bool IsMap => CurrentState == GameState.Map;
     public bool IsShop => CurrentState == GameState.Shop;
     public bool IsDeliveryResult => CurrentState == GameState.DeliveryResult;
-    public bool IsGameOver => CurrentState == GameState.GameOver;
 }

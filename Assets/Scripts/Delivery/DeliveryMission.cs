@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum MissionState
@@ -40,6 +41,9 @@ public class DeliveryMission
     public int IntegrityPenalty => integrityPenalty;
     public int FinalReward => finalReward;
 
+    // Event fired when a node is visited
+    public static event Action<DeliveryMission, RouteNodeType> OnNodeVisited;
+
     public DeliveryMission(DeliveryNPCSpawner reservedGiverSpawner, DeliveryNPCSpawner reservedReceiverSpawner)
     {
         // Assign reserved spawners and sets initial state
@@ -54,23 +58,23 @@ public class DeliveryMission
         // Activate mission and record start time
         State = MissionState.Active;
         startTime = Time.time;
-    }
 
-    public void NotifyDelivered()
-    {
-        if (State != MissionState.Active)
-            return;
-
-        // Calculate rewards and show results
-        deliveryTime = Time.time - startTime;
-        CalculateReward();
-
-        DeliveryResultUIManager.Instance.Show(this);
+        // Notify listeners
+        OnNodeVisited?.Invoke(this, RouteNodeType.Giver);
     }
 
     public void Complete()
     {
+        if (State != MissionState.Active)
+            return;
+
+        // Complete mission and calculate rewards
         State = MissionState.Completed;
+        deliveryTime = Time.time - startTime;
+        CalculateReward();
+
+        // Notify listeners
+        OnNodeVisited?.Invoke(this, RouteNodeType.Receiver);
     }
 
     private void CalculateReward()

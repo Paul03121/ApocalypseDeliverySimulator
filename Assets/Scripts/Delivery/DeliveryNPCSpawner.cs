@@ -62,7 +62,8 @@ public class DeliveryNPCSpawner : MonoBehaviour
 
     public bool HasValidReceiver()
     {
-        return receiverPrefabs != null && receiverPrefabs.Count > 0;
+        var valid = GetValidReceiversForCurrentFlag();
+        return valid != null && valid.Count > 0;
     }
 
     // Get all giver prefabs that are valid for the current game progress
@@ -73,12 +74,22 @@ public class DeliveryNPCSpawner : MonoBehaviour
 
         DeliveryFlag currentFlag = DeliveryFlags.Instance.currentFlag;
 
-        return giverPrefabs.FindAll(prefabGiver => prefabGiver.flag >= minimumFlag && prefabGiver.flag <= currentFlag);
+        return giverPrefabs.FindAll(giverPrefab => giverPrefab.flag >= minimumFlag && giverPrefab.flag <= currentFlag);
+    }
+
+    // Get all receiver prefabs that are valid for the current game progress
+    private List<NPCDeliveryReceiver> GetValidReceiversForCurrentFlag()
+    {
+        if (receiverPrefabs == null || receiverPrefabs.Count == 0)
+            return null;
+
+        DeliveryFlag currentFlag = DeliveryFlags.Instance.currentFlag;
+
+        return receiverPrefabs.FindAll(receiverPrefab => receiverPrefab.flag >= minimumFlag && receiverPrefab.flag <= currentFlag);
     }
 
     public void SpawnGiver(DeliveryMission mission)
     {
-        Debug.Log($"[Delivery NPC Spawner] {name} spawning giver NPC");
         if (reservedMission != mission)
         {
             Debug.LogError($"[Delivery NPC Spawner] {name} failed: can't spawn NPC for this mission");
@@ -102,20 +113,25 @@ public class DeliveryNPCSpawner : MonoBehaviour
         // Assign the spawned giver NPC and its associated flag to the mission
         mission.giver = giver;
         mission.flag = chosen.flag;
-        Debug.Log($"[Delivery NPC Spawner] {name} spawned giver NPC successfully");
     }
 
     public void SpawnReceiver(DeliveryMission mission)
     {
-        Debug.Log($"[Delivery NPC Spawner] {name} spawning receiver NPC");
         if (reservedMission != mission)
         {
             Debug.LogError($"[Delivery NPC Spawner] {name} failed: can't spawn NPC for this mission");
             return;
         }
 
+        var valid = GetValidReceiversForCurrentFlag();
+        if (valid == null || valid.Count == 0)
+        {
+            Debug.LogError($"[Delivery NPC Spawner] {name} failed: called with no valid receiver prefabs");
+            return;
+        }
+
         // Choose a random receiver prefab
-        var chosen = receiverPrefabs[Random.Range(0, receiverPrefabs.Count)];
+        var chosen = valid[Random.Range(0, valid.Count)];
         var receiver = Instantiate(chosen, transform.position, transform.rotation);
 
         receiver.AssignMission(mission);
@@ -123,6 +139,5 @@ public class DeliveryNPCSpawner : MonoBehaviour
 
         // Assign the spawned receiver NPC to the mission
         mission.receiver = receiver;
-        Debug.Log($"[Delivery NPC Spawner] {name} spawned receiver NPC successfully");
     }
 }

@@ -9,8 +9,16 @@ public class DeliveryManager : MonoBehaviour
     private readonly List<DeliveryMission> generatedMissions = new();
     private readonly List<DeliveryNPCSpawner> registeredSpawners = new();
 
+    public List<DeliveryMission> GeneratedMissions => generatedMissions;
+
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
     }
 
@@ -33,15 +41,14 @@ public class DeliveryManager : MonoBehaviour
         // Generate missions until max count is reached
         while (generatedMissions.Count < max)
         {
+            // Stop if mission generation fails
             if (!GenerateSingleMission())
-                break;  // Stop if mission generation fails
+                break;
         }
     }
 
     private bool GenerateSingleMission()
     {
-        Debug.Log("[Delivery Manager] Attempting to generate a new delivery mission");
-
         if (registeredSpawners.Count < 2)
         {
             Debug.Log("[Delivery Manager] Not enough spawners registered to generate mission");
@@ -58,15 +65,17 @@ public class DeliveryManager : MonoBehaviour
             return false;
         }
 
-        // Randomly select a giver spawner and remove it from receivers to avoid duplication
-        var reservedGiverSpawner = availableGiverSpawners[Random.Range(0, availableGiverSpawners.Count)];
-        availableReceiverSpawners.Remove(reservedGiverSpawner);
+        // Select a giver spawner
+        var reservedGiverSpawner = SelectGiverSpawner(availableGiverSpawners, availableReceiverSpawners);
 
-        if (availableReceiverSpawners.Count == 0)
+        if (reservedGiverSpawner == null)
         {
-            Debug.Log("[Delivery Manager] No valid receiver spawner after filtering giver");
+            Debug.Log("[Delivery Manager] Only one receiver and no alternative giver available");
             return false;
         }
+
+        // Remove giver from possible receivers to avoid duplication
+        availableReceiverSpawners.Remove(reservedGiverSpawner);
 
         // Randomly select a receiver spawner
         var reservedReceiverSpawner = availableReceiverSpawners[Random.Range(0, availableReceiverSpawners.Count)];
@@ -90,8 +99,30 @@ public class DeliveryManager : MonoBehaviour
         reservedGiverSpawner.SpawnGiver(mission);
 
         generatedMissions.Add(mission);
-        Debug.Log($"[Delivery Manager] Mission created");
+
+        // Add icons to the map
+        MapUIManager.Instance.RegisterGiverGenerated(mission, reservedGiverSpawner.transform);
+        MapUIManager.Instance.RegisterReceiverGenerated(mission, reservedReceiverSpawner.transform);
+
         return true;
+    }
+
+    private DeliveryNPCSpawner SelectGiverSpawner(List<DeliveryNPCSpawner> availableGiverSpawners, List<DeliveryNPCSpawner> availableReceiverSpawners)
+    {
+        // Special case: Avoid blocking the only possible receiver
+        if (availableReceiverSpawners.Count == 1)
+        {
+            var lastReceiver = availableReceiverSpawners[0];
+
+            if (availableGiverSpawners.Contains(lastReceiver))
+            {
+                // Choose a giver different from receiver
+                return availableGiverSpawners.Find(spawner => spawner != lastReceiver);
+            }
+        }
+
+        // Default case: Randomly select a giver spawner
+        return availableGiverSpawners[Random.Range(0, availableGiverSpawners.Count)];
     }
 
     public void ActivateMission(DeliveryMission mission, PackageInteractable package)
@@ -100,11 +131,20 @@ public class DeliveryManager : MonoBehaviour
 
         mission.package = package;
         mission.Activate();
-        Debug.Log("[Delivery Manager] Mission activated");
+
+        // Update map icons
+        MapUIManager.Instance.SetGiverInactive(mission, mission.reservedGiverSpawner.transform);
+        MapUIManager.Instance.SetReceiverActive(mission, mission.reservedReceiverSpawner.transform);
     }
 
     public void CompleteMission(DeliveryMission mission)
     {
+        // Mark mission as completed
+        mission.Complete();
+
+        // Show results UI
+        DeliveryResultUIManager.Instance.Show(mission);
+
         // Clear and release spawners after completion
         mission.reservedGiverSpawner.Clear();
         mission.reservedReceiverSpawner.Clear();
@@ -112,11 +152,10 @@ public class DeliveryManager : MonoBehaviour
         mission.reservedGiverSpawner.Release(mission);
         mission.reservedReceiverSpawner.Release(mission);
 
+        // Remove map icons
+        MapUIManager.Instance.UnregisterGiver(mission);
+        MapUIManager.Instance.UnregisterReceiver(mission);
+
         generatedMissions.Remove(mission);
-
-        Debug.Log("[Delivery Manager] Mission completed and spawners released");
-
-        // Try to generate new missions
-        GenerateMissions();
     }
 }

@@ -7,10 +7,11 @@ public class UIManager : MonoBehaviour
     [Header("References")]
     public GameObject gameplayUI;
     public GameObject pauseUI;
+    public GameObject gameOverUI;
     public GameObject inventoryUI;
+    public GameObject mapUI;
     public GameObject shopUI;
     public GameObject deliveryResultUI;
-    public GameObject gameOverUI;
 
     private void Awake()
     {
@@ -37,11 +38,25 @@ public class UIManager : MonoBehaviour
             pauseUI.SetActive(value);
     }
 
+    // Enable or disable the Game Over UI
+    public void ShowGameOverUI(bool value)
+    {
+        if (gameOverUI != null)
+            gameOverUI.SetActive(value);
+    }
+
     // Enable or disable the Inventory UI
     public void ShowInventoryUI(bool value)
     {
         if (inventoryUI != null)
             inventoryUI.SetActive(value);
+    }
+
+    // Enable or disable the Map UI
+    public void ShowMapUI(bool value)
+    {
+        if (mapUI != null)
+            mapUI.SetActive(value);
     }
 
     // Enable or disable the Shop UI
@@ -56,12 +71,5 @@ public class UIManager : MonoBehaviour
     {
         if (deliveryResultUI != null)
             deliveryResultUI.SetActive(value);
-    }
-
-    // Enable or disable the Game Over UI
-    public void ShowGameOverUI(bool value)
-    {
-        if (gameOverUI != null)
-            gameOverUI.SetActive(value);
     }
 }

@@ -692,7 +692,7 @@ GameObject:
   - component: {fileID: 8600622178952411795}
   - component: {fileID: 5757166511585381033}
   - component: {fileID: 2936495917115238803}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: DeliveryReceiver_TutorialStep1
   m_TagString: Untagged
   m_Icon: {fileID: 0}

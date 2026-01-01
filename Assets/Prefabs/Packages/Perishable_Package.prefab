@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 1618947543741796410}
   - component: {fileID: 3158816515114858878}
   - component: {fileID: 5554024182087985993}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Perishable_Package
   m_TagString: Untagged
   m_Icon: {fileID: 0}

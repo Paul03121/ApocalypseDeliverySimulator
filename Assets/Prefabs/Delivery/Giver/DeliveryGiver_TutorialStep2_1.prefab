@@ -1842,8 +1842,8 @@ GameObject:
   - component: {fileID: 3525213943289436246}
   - component: {fileID: 3359188648149094320}
   - component: {fileID: 5392164119196919382}
-  m_Layer: 0
-  m_Name: DeliveryGiver_TutorialStep2
+  m_Layer: 7
+  m_Name: DeliveryGiver_TutorialStep2_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
