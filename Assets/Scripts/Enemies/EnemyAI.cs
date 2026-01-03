@@ -15,6 +15,7 @@ public class EnemyAI : MonoBehaviour
     private NavMeshAgent agent;
     private EnemyAttack attack;
     private EnemyBase enemy;
+    private Animator animator;
 
     private void Awake()
     {
@@ -22,6 +23,7 @@ public class EnemyAI : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         attack = GetComponent<EnemyAttack>();
         enemy = GetComponent<EnemyBase>();
+        animator = GetComponentInChildren<Animator>();
 
         // Locate player transform
         player = GameObject.FindGameObjectWithTag("Player").transform;
@@ -35,6 +37,8 @@ public class EnemyAI : MonoBehaviour
 
     private void Update()
     {
+        if (enemy.IsDead) return;
+
         float dist = Vector3.Distance(transform.position, player.position);
 
         // Main state switch
@@ -69,6 +73,9 @@ public class EnemyAI : MonoBehaviour
 
         // Lock enemy to terrain height
         ApplyGrounding();
+
+        // Animation update
+        UpdateAnimationParameters();
     }
 
     private void ChangeState(State newState)
@@ -159,8 +166,7 @@ public class EnemyAI : MonoBehaviour
         Vector3 randomDirection = Random.insideUnitSphere * dist;
         randomDirection += origin;
 
-        NavMeshHit navHit;
-        NavMesh.SamplePosition(randomDirection, out navHit, dist, -1);
+        NavMesh.SamplePosition(randomDirection, out NavMeshHit navHit, dist, -1);
 
         return navHit.position;
     }
@@ -213,6 +219,21 @@ public class EnemyAI : MonoBehaviour
                 position.z
             );
         }
+    }
+
+    private void UpdateAnimationParameters()
+    {
+        float animSpeed = 0f;
+
+        if (agent.velocity.magnitude > 0.1f)
+        {
+            if (currentState == State.Wander)
+                animSpeed = 0.5f;
+            else if (currentState == State.Chase)
+                animSpeed = 1f;
+        }
+
+        animator.SetFloat("Speed", animSpeed, 0.1f, Time.deltaTime);
     }
 
     private void OnDrawGizmosSelected()

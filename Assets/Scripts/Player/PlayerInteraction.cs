@@ -12,16 +12,28 @@ public class PlayerInteraction : MonoBehaviour
     private Transform player;                   // Cached player transform
     private Camera playerCamera;                // Cached first person camera
 
+    private Animator animator;                  // Reference to animator controller
+
     [SerializeField] private WeaponIconUI weaponIconUI; // Show or hide weapon icon
 
-    void Start()
+    [Header("Death System Block")]
+    private PlayerHealth playerHealth;
+    private bool isBlocked = false;
+
+    void Awake()
     {
         player = transform;
         playerCamera = Camera.main;
+
+        animator = GetComponentInChildren<Animator>();
+        playerHealth = GetComponent<PlayerHealth>();
     }
 
     void Update()
     {
+        // Block if player is dead
+        if (isBlocked) return;
+
         DetectInteractables();
 
         // Stop working if game is paused or if player died
@@ -31,6 +43,28 @@ public class PlayerInteraction : MonoBehaviour
         HandleInteractionInput();
         HandleDropInput();
         HandleEquipInput();
+    }
+
+    void OnEnable()
+    {
+        playerHealth.OnPlayerDeathStarted += HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded += HandlePlayerDeathEnded;
+    }
+
+    void OnDisable()
+    {
+        playerHealth.OnPlayerDeathStarted -= HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded -= HandlePlayerDeathEnded;
+    }
+
+    private void HandlePlayerDeathStarted()
+    {
+        isBlocked = true;
+    }
+
+    private void HandlePlayerDeathEnded()
+    {
+        isBlocked = false;
     }
 
     // Handles the interaction logic when the player presses the interaction key
@@ -87,6 +121,9 @@ public class PlayerInteraction : MonoBehaviour
             if (currentClosest is PackageInteractable pkg && pkg.isBeingHeld)
             {
                 SetCarriedPackage(pkg);
+
+                // Notify animator
+                animator.SetBool("isCarryingPackage", true);
             }
 
             // If the interacted object is a weapon and it is now being held
@@ -101,6 +138,9 @@ public class PlayerInteraction : MonoBehaviour
                     return;
                 }
                 weaponIconUI.UpdateWeaponIcon(weaponBase, true, true);
+
+                // Notify animator
+                animator.SetInteger("CurrentWeapon", weaponBase.WeaponId);
             }
         }
     }
@@ -118,6 +158,9 @@ public class PlayerInteraction : MonoBehaviour
             {
                 carriedPackage.Drop();
                 ClearCarriedPackage();
+
+                // Notify animator
+                animator.SetBool("isCarryingPackage", false);
                 return;
             }
 
@@ -129,6 +172,9 @@ public class PlayerInteraction : MonoBehaviour
                     carriedWeapon.Drop();
                     ClearCarriedWeapon();
                     weaponIconUI.UpdateWeaponIcon(null, false, false);
+
+                    // Notify animator
+                    animator.SetInteger("CurrentWeapon", 0);
                 }
             }
         }
@@ -149,6 +195,10 @@ public class PlayerInteraction : MonoBehaviour
 
                 WeaponBase weaponBase = carriedWeapon.GetComponent<WeaponBase>();
                 weaponIconUI.UpdateWeaponIcon(weaponBase, true, false);
+
+                // Notify animator
+                animator.SetInteger("CurrentWeapon", 0);
+
                 return;
             }
 
@@ -164,6 +214,10 @@ public class PlayerInteraction : MonoBehaviour
 
                 WeaponBase weaponBase = carriedWeapon.GetComponent<WeaponBase>();
                 weaponIconUI.UpdateWeaponIcon(weaponBase, true, true);
+
+                // Notify animator
+                animator.SetInteger("CurrentWeapon", weaponBase.WeaponId);
+
                 return;
             }
         }
@@ -190,7 +244,7 @@ public class PlayerInteraction : MonoBehaviour
         // Detect what the player is actually looking at
         currentClosest = null;
 
-        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        Ray ray = new(playerCamera.transform.position, playerCamera.transform.forward);
 
         if (Physics.Raycast(ray, out RaycastHit hit, interactRange))
         {
@@ -233,9 +287,6 @@ public class PlayerInteraction : MonoBehaviour
             obj.OnLoseFocus();
             return;
         }
-
-
-
 
         if (!isLookedAt)
         {

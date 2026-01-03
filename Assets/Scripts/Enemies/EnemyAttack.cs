@@ -2,15 +2,19 @@ using UnityEngine;
 
 public class EnemyAttack : MonoBehaviour
 {
-    public float attackCooldown = 2f;
+    public float attackCooldown = 3f;
     private float cooldownTimer = 0f;
 
+    [Header("References")]
     private EnemyBase enemy;
+    private Animator animator;
+    private Transform currentTarget;
 
     private void Awake()
     {
-        // Cache EnemyBase reference
+        // Cache references
         enemy = GetComponent<EnemyBase>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     public void TryAttack(Transform target, float requiredDistance)
@@ -28,14 +32,30 @@ public class EnemyAttack : MonoBehaviour
         // Only attack if the target is within range
         if (dist <= requiredDistance)
         {
-            PlayerHealth ph = target.GetComponent<PlayerHealth>();
+            currentTarget = target;
+
+            // Notify animator
+            animator.SetTrigger("AttackTrigger");
+
+            // Reset cooldown
+            cooldownTimer = attackCooldown;
+        }
+    }
+
+    public void ExecuteDamage()
+    {
+        if (currentTarget == null || enemy.IsDead) return;
+
+        // Check distance with target
+        float dist = Vector3.Distance(transform.position, currentTarget.position);
+        if (dist <= enemy.attackRange * 1.2f)
+        {
+            PlayerHealth ph = currentTarget.GetComponent<PlayerHealth>();
             if (ph != null)
             {
+                // Apply damage
                 ph.TakeDamage(enemy.baseDamage);
             }
-
-            // Reset cooldown after performing an attack
-            cooldownTimer = attackCooldown;
         }
     }
 }

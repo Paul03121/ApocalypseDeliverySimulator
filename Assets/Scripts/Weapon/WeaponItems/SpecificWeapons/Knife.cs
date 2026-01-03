@@ -5,15 +5,14 @@ public class Knife : MeleeWeapon
     private void Reset()
     {
         weaponName = "Knife";
-        damage = 5f;
+        weaponId = 1;
+        damage = 6.5f;
         range = 1.5f;
-        cooldown = 0.5f;
+        cooldown = 1.3f;
     }
 
     protected override void OnMeleeAttack()
     {
         // TODO: Sound
-
-        // TODO: Animation
     }
 }

@@ -5,12 +5,15 @@ public class EnemyHealth : MonoBehaviour
     public float maxHealth = 50f;
     private float currentHealth;
 
+    [Header("References")]
     private EnemyBase enemy;
+    private Animator animator;
 
     private void Awake()
     {
-        // Cache reference to the EnemyBase component
+        // Cache references
         enemy = GetComponent<EnemyBase>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     private void Start()
@@ -26,8 +29,15 @@ public class EnemyHealth : MonoBehaviour
     {
         currentHealth -= amount;
 
-        // Trigger death
         if (currentHealth <= 0f)
+        {
+            // Trigger death
             enemy.Die();
+        }
+        else
+        {
+            // Notify animator
+            animator.SetTrigger("isHitted");
+        }
     }
 }

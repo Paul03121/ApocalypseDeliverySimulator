@@ -42,12 +42,20 @@ public class MapUIManager : MonoBehaviour
     private bool isDragging;
     private Vector2 lastMousePosition;
 
+    [Header("Death System Block")]
+    private PlayerHealth playerHealth;
+    private bool isBlocked = false;
+
     // Active map icons indexed by (owner, type)
     private readonly Dictionary<(object, MapIconType), MapIcon> activeIcons = new();
 
     private void Awake()
     {
         Instance = this;
+
+        playerHealth = FindObjectOfType<PlayerHealth>();
+        if (playerHealth == null)
+            Debug.LogError("PlayerHealth not found in scene");
     }
 
     private void Start()
@@ -57,6 +65,9 @@ public class MapUIManager : MonoBehaviour
 
     private void Update()
     {
+        // Block if player is dead
+        if (isBlocked) return;
+
         // Prevents multiple state changes in the same frame
         if (!GameStateManager.Instance.CanChangeState)
             return;
@@ -86,6 +97,28 @@ public class MapUIManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.C))
                 CenterMapOnPlayer();
         }
+    }
+
+    void OnEnable()
+    {
+        playerHealth.OnPlayerDeathStarted += HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded += HandlePlayerDeathEnded;
+    }
+
+    void OnDisable()
+    {
+        playerHealth.OnPlayerDeathStarted -= HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded -= HandlePlayerDeathEnded;
+    }
+
+    private void HandlePlayerDeathStarted()
+    {
+        isBlocked = true;
+    }
+
+    private void HandlePlayerDeathEnded()
+    {
+        isBlocked = false;
     }
 
     private void OpenMap()

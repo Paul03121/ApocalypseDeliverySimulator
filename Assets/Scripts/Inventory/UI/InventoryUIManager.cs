@@ -36,9 +36,12 @@ public class InventoryUIManager : MonoBehaviour
 
     private Inventory inventory;
     private PlayerWallet wallet;
+    private PlayerHealth playerHealth;
 
     private InventoryItemInstance currentSelectedItem;
     private RectTransform currentSlotTransform;
+
+    private bool isBlocked = false;
 
     private Dictionary<EquipmentSlot, Transform> equipmentGrids;
 
@@ -47,12 +50,16 @@ public class InventoryUIManager : MonoBehaviour
         // Cache required player components
         inventory = player.GetComponent<Inventory>();
         wallet = player.GetComponent<PlayerWallet>();
+        playerHealth = player.GetComponent<PlayerHealth>();
 
         if (inventory == null)
             Debug.LogError("Inventory not found on Player");
 
         if (wallet == null)
             Debug.LogError("PlayerWallet not found on Player");
+
+        if (playerHealth == null)
+            Debug.LogError("PlayerHealth not found on Player");
 
         // Initialize equipment dictionary
         equipmentGrids = new Dictionary<EquipmentSlot, Transform>
@@ -62,25 +69,11 @@ public class InventoryUIManager : MonoBehaviour
         };
     }
 
-    private void OnEnable()
-    {
-        // Subscribe to money change event
-        if (wallet != null)
-        {
-            wallet.OnMoneyChanged += UpdateMoneyUI;
-            UpdateMoneyUI(wallet.CurrentMoney);
-        }
-    }
-
-    private void OnDisable()
-    {
-        // Unsubscribe from money change event
-        if (wallet != null)
-            wallet.OnMoneyChanged -= UpdateMoneyUI;
-    }
-
     private void Update()
     {
+        // Block if player is dead
+        if (isBlocked) return;
+
         // Prevents multiple state changes in the same frame
         if (!GameStateManager.Instance.CanChangeState)
             return;
@@ -99,6 +92,41 @@ public class InventoryUIManager : MonoBehaviour
         // Close inventory with Esc if it is already open
         if (GameStateManager.Instance.IsInventory && Input.GetKeyDown(KeyCode.Escape))
             CloseInventory();
+    }
+
+    private void OnEnable()
+    {
+        // Subscribe to money change event
+        if (wallet != null)
+        {
+            wallet.OnMoneyChanged += UpdateMoneyUI;
+            UpdateMoneyUI(wallet.CurrentMoney);
+        }
+
+        // Subscribe to death event
+        playerHealth.OnPlayerDeathStarted += HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded += HandlePlayerDeathEnded;
+    }
+
+    private void OnDisable()
+    {
+        // Unsubscribe from money change event
+        if (wallet != null)
+            wallet.OnMoneyChanged -= UpdateMoneyUI;
+
+        // Unsubscribe from death event
+        playerHealth.OnPlayerDeathStarted -= HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded -= HandlePlayerDeathEnded;
+    }
+
+    private void HandlePlayerDeathStarted()
+    {
+        isBlocked = true;
+    }
+
+    private void HandlePlayerDeathEnded()
+    {
+        isBlocked = false;
     }
 
     private void OpenInventory()

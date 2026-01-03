@@ -12,19 +12,27 @@ public class PlayerHealth : MonoBehaviour
 
     private float currentHealth;
 
+    private Animator animator;
+
     public float MaxHealth => baseMaxHealth + bonusMaxHealth;
     public float CurrentHealth => currentHealth;
 
     // Event fired whenever health changes
     public event Action<float, float> OnHealthChanged;
 
-    // Event fired when the player dies
-    public event Action OnPlayerDeath;
+    // Event fired when the player death animation starts
+    public event Action OnPlayerDeathStarted;
+
+    // Event fired when the player death animation ends
+    public event Action OnPlayerDeathEnded;
 
     private void Awake()
     {
         // Initialize health to full at start
         currentHealth = MaxHealth;
+
+        // Get animator component
+        animator = GetComponentInChildren<Animator>();
     }
 
     // Applies damage to the player
@@ -67,12 +75,26 @@ public class PlayerHealth : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, MaxHealth);
     }
 
-    private void Die()
+    public void Die()
     {
-        // TODO: Trigger death animation
-
         // Notify listeners
-        OnPlayerDeath?.Invoke();
+        OnPlayerDeathStarted?.Invoke();
+
+        // Update animator mode
+        animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+
+        // Notify animator
+        animator.SetTrigger("isDeath");
+
+        Time.timeScale = 0;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void NotifyPlayerDeathEnded()
+    {
+        // Notify listeners
+        OnPlayerDeathEnded?.Invoke();
     }
 
     public void AddMaxHealthBonus(float amount)

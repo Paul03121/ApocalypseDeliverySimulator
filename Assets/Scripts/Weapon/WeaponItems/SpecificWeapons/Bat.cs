@@ -5,15 +5,14 @@ public class Bat : MeleeWeapon
     private void Reset()
     {
         weaponName = "Bat";
-        damage = 10f;
-        range = 2f;
-        cooldown = 0.8f;
+        weaponId = 2;
+        damage = 9f;
+        range = 1.8f;
+        cooldown = 1.65f;
     }
 
     protected override void OnMeleeAttack()
     {
         // TODO: Sound
-
-        // TODO: Animation
     }
 }

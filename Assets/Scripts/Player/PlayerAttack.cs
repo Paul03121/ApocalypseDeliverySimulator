@@ -4,15 +4,25 @@ public class PlayerAttack : MonoBehaviour
 {
     public LayerMask enemyLayer;
 
+    [Header("References")]
+    private Animator animator;
     private WeaponHolder weaponHolder;
+    private PlayerHealth playerHealth;
+    
+    private bool isBlocked = false;
 
     private void Awake()
     {
         weaponHolder = GetComponent<WeaponHolder>();
+        animator = GetComponentInChildren<Animator>();
+        playerHealth = GetComponent<PlayerHealth>();
     }
 
     void Update()
     {
+        // Block if player is dead
+        if (isBlocked) return;
+
         // Stop working if game is paused or if player died
         if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
             return;
@@ -22,7 +32,7 @@ public class PlayerAttack : MonoBehaviour
             return;
 
         // Get the interactable weapon currently equipped
-        WeaponInteractable interactableWeapon = weaponHolder.equippedWeapon;
+        WeaponInteractable interactableWeapon = weaponHolder.EquippedWeapon;
         if (interactableWeapon == null)
             return;
 
@@ -41,8 +51,33 @@ public class PlayerAttack : MonoBehaviour
         }
     }
 
+    void OnEnable()
+    {
+        playerHealth.OnPlayerDeathStarted += HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded += HandlePlayerDeathEnded;
+    }
+
+    void OnDisable()
+    {
+        playerHealth.OnPlayerDeathStarted -= HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded -= HandlePlayerDeathEnded;
+    }
+
+    private void HandlePlayerDeathStarted()
+    {
+        isBlocked = true;
+    }
+
+    private void HandlePlayerDeathEnded()
+    {
+        isBlocked = false;
+    }
+
     private void PerformAttack(WeaponBase weapon)
     {
+        // Notify animator
+        animator.SetTrigger("AttackTrigger");
+
         // Trigger the weapon's internal attack logic
         weapon.Attack();
 
@@ -52,14 +87,14 @@ public class PlayerAttack : MonoBehaviour
         Vector3 direction = cam.transform.forward;
 
         // Perform raycast
-        if (Physics.Raycast(origin, direction, out RaycastHit hitInfo, weapon.range, enemyLayer))
+        if (Physics.Raycast(origin, direction, out RaycastHit hitInfo, weapon.Range, enemyLayer))
         {
             EnemyHealth enemyHealth = hitInfo.collider.GetComponent<EnemyHealth>();
 
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(weapon.damage);
-                Debug.Log($"{weapon.damage} damage applied to {hitInfo.collider.name}. Remaining health: {enemyHealth.GetCurrentHealth()}");
+                enemyHealth.TakeDamage(weapon.Damage);
+                Debug.Log($"{weapon.Damage} damage applied to {hitInfo.collider.name}. Remaining health: {enemyHealth.GetCurrentHealth()}");
             }
             else
             {
@@ -76,7 +111,7 @@ public class PlayerAttack : MonoBehaviour
     {
         if (Application.isPlaying && weaponHolder.IsWeaponEquipped)
         {
-            WeaponInteractable interactableWeapon = weaponHolder.equippedWeapon;
+            WeaponInteractable interactableWeapon = weaponHolder.EquippedWeapon;
             WeaponBase weapon = interactableWeapon.GetComponent<WeaponBase>();
 
             Camera cam = weaponHolder.playerCamera;
@@ -88,15 +123,15 @@ public class PlayerAttack : MonoBehaviour
 
             // Draw weapon range
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(origin, weapon.range);
+            Gizmos.DrawWireSphere(origin, weapon.Range);
 
             // Draw the attack ray
             Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(origin, origin + direction * weapon.range);
+            Gizmos.DrawLine(origin, origin + direction * weapon.Range);
 
             // Draw hit endpoint indicator
             Gizmos.color = Color.green;
-            Gizmos.DrawSphere(origin + direction * weapon.range, 0.05f);
+            Gizmos.DrawSphere(origin + direction * weapon.Range, 0.05f);
         }
     }
 }

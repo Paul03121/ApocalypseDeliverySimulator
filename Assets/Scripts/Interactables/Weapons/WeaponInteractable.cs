@@ -2,8 +2,15 @@ using UnityEngine;
 
 public class WeaponInteractable : Interactable
 {
+    [Header("Hand Follow Settings")]
+    public Vector3 equippedPositionOffset;
+    public Vector3 equippedRotationOffset;
+    public Vector3 unequippedPositionOffset;
+    public Vector3 unequippedRotationOffset;
+
     [Header("State")]
     public bool isBeingHeld = false;
+
     private WeaponHolder holder;
 
     protected override void OnInteract()
@@ -23,7 +30,6 @@ public class WeaponInteractable : Interactable
         // Reset interaction flags to allow future interactions
         isInteracted = false;
 
-        // Pick up the weapon
         PickUp();
     }
 
@@ -35,7 +41,6 @@ public class WeaponInteractable : Interactable
         // TODO: Add pickup sound effect
 
         holder.PickUp(this);
-        Debug.Log("Weapon picked up");
     }
 
     public void Drop()
@@ -46,7 +51,6 @@ public class WeaponInteractable : Interactable
         // TODO: Add drop sound effect
 
         holder.Drop();
-        Debug.Log("Weapon dropped");
     }
     public void EquipWeapon()
     {
@@ -55,7 +59,6 @@ public class WeaponInteractable : Interactable
         // TODO: Add sound effect
 
         holder.EquipWeapon();
-        Debug.Log("Weapon equipped");
     }
 
     public void UnequipWeapon()
@@ -65,6 +68,5 @@ public class WeaponInteractable : Interactable
         // TODO: Add sound effect
 
         holder.UnequipWeapon();
-        Debug.Log("Weapon unequipped");
     }
 }

@@ -7,12 +7,19 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
     public Transform playerBody;
     public float distance = 5f;
     public float height = 0.5f;
+    public float maxRotationAngle = 45f;
 
     [Header("Collision Settings")]
     public LayerMask collisionLayers;
     public float collisionOffset = 0.3f;
     public float smoothSpeed = 10f;
     public float sphereCastRadius = 0.3f;
+
+    [Header("Death Settings")]
+    [SerializeField] private float deathMaxAngle = 40f;
+    [SerializeField] private float deathInputSpeed = 0.5f;
+    [SerializeField] private float deathDistance = 3f;
+    private bool isDeathView = false;
 
     private float xRotation = 0f;
     private float yRotation = 0f;
@@ -22,17 +29,7 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
 
     void Start()
     {
-        // Align camera rotation with player's forward direction at startup
-        Vector3 playerForward = playerBody.forward;
-        yRotation = Quaternion.LookRotation(playerForward).eulerAngles.y;
-
-        // Apply same logic as ResetCameraPosition to ensure correct starting position
-        Quaternion rotation = Quaternion.Euler(xRotation, yRotation, 0f);
-        Vector3 offset = rotation * new Vector3(0f, height, distance);
-        transform.position = playerBody.position + offset;
-        transform.LookAt(playerBody.position + Vector3.up * height);
-
-        currentCamPosition = transform.position;
+        ResetCameraPosition();
     }
 
     void LateUpdate()
@@ -41,13 +38,26 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
         if (!GameStateManager.Instance.IsGameplay)
             return;
 
-        // Read mouse input
-        float mouseX = Input.GetAxis("Mouse X") * sensitivity * sensitivityMultiplier;
-        float mouseY = Input.GetAxis("Mouse Y") * sensitivity * sensitivityMultiplier;
+        if (!isDeathView)
+        {
+            // Read mouse input
+            float mouseX = Input.GetAxis("Mouse X") * sensitivity * sensitivityMultiplier;
+            float mouseY = Input.GetAxis("Mouse Y") * sensitivity * sensitivityMultiplier;
 
-        yRotation += mouseX;
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -45f, 45f);
+            UpdateCameraWithInput(mouseX, mouseY, maxRotationAngle, distance);
+        }
+        else
+        {
+            // Force camera movement to see the player's death animation
+            UpdateCameraWithInput(0, deathInputSpeed, deathMaxAngle, deathDistance);
+        }
+    }
+
+    public void UpdateCameraWithInput(float inputX, float inputY, float maxAngle, float distance)
+    {
+        yRotation += inputX;
+        xRotation -= inputY;
+        xRotation = Mathf.Clamp(xRotation, -maxAngle, maxAngle);
 
         // Calculate desired rotation and position
         Quaternion rotation = Quaternion.Euler(xRotation, yRotation, 0f);
@@ -59,10 +69,8 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
         Vector3 direction = (desiredPosition - rayOrigin).normalized;
         float maxDistance = Vector3.Distance(rayOrigin, desiredPosition);
 
-        RaycastHit hit;
-
         // Horizontal collision detection
-        if (Physics.SphereCast(rayOrigin, sphereCastRadius, direction, out hit, maxDistance, collisionLayers))
+        if (Physics.SphereCast(rayOrigin, sphereCastRadius, direction, out RaycastHit hit, maxDistance, collisionLayers))
         {
             Vector3 hitPosition = hit.point + hit.normal * collisionOffset;
             hitPosition.y = desiredPosition.y;  // Keep height temporarily
@@ -90,8 +98,11 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
             }
         }
 
+        // Allow camera movement if time is frozen only for death view
+        float deltaTime = isDeathView ? Time.unscaledDeltaTime : Time.deltaTime;
+
         // Smooth camera movement
-        currentCamPosition = Vector3.Lerp(currentCamPosition, desiredPosition, smoothSpeed * Time.deltaTime);
+        currentCamPosition = Vector3.Lerp(currentCamPosition, desiredPosition, smoothSpeed * deltaTime);
 
         // Apply position and rotation
         transform.position = currentCamPosition;
@@ -115,5 +126,15 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
         transform.LookAt(playerBody.position + Vector3.up * height);
 
         currentCamPosition = transform.position;
+    }
+
+    public void EnterDeathView()
+    {
+        isDeathView = true;
+    }
+
+    public void ExitDeathView()
+    {
+        isDeathView = false;
     }
 }

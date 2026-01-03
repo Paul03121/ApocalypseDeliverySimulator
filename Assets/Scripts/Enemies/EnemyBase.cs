@@ -17,14 +17,18 @@ public abstract class EnemyBase : MonoBehaviour
     public float viewAngle = 100f;
     public float wanderCooldown = 10f;
 
-    public bool isDead { get; private set; } = false;
+    public bool IsDead { get; private set; } = false;
 
+    private Animator animator;
     protected Transform player;
 
     public event System.Action OnDeath;
 
     protected virtual void Awake()
     {
+        // Animator reference
+        animator = GetComponentInChildren<Animator>();
+
         // Player reference
         if (player == null)
             player = GameObject.FindWithTag("Player")?.transform;
@@ -32,10 +36,13 @@ public abstract class EnemyBase : MonoBehaviour
 
     public virtual void Die()
     {
-        if (isDead) return;
-        isDead = true;
+        if (IsDead) return;
 
-        Debug.Log($"{name} has died.");
+        IsDead = true;
+
+        // Notify animator
+        animator.SetTrigger("isDefeated");
+
         OnDeath?.Invoke();
 
         // Deactivate IA
@@ -55,8 +62,7 @@ public abstract class EnemyBase : MonoBehaviour
         if (damageDealer != null)
             damageDealer.enabled = false;
 
-        // TODO: Death animation
 
-        Destroy(gameObject, 4f);
+        Destroy(gameObject, 6f);
     }
 }

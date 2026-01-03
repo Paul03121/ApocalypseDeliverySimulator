@@ -8,7 +8,7 @@ public class GameOverMenuManager : MonoBehaviour
     private void Start()
     {
         // Subscribe to the player death event
-        playerHealth.OnPlayerDeath += ShowGameOver;
+        playerHealth.OnPlayerDeathEnded += ShowGameOver;
     }
 
     private void ShowGameOver()
