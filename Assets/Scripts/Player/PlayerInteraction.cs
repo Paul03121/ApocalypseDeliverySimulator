@@ -85,14 +85,14 @@ public class PlayerInteraction : MonoBehaviour
                 // If carrying a package, prevent interaction with other packages
                 if (currentClosest is PackageInteractable)
                 {
-                    Debug.Log("Ya llevas un paquete.");
+                    MessageUIManager.Instance.ShowMessage("Ya llevas un paquete.");
                     return;
                 }
 
                 // If carrying a package, prevent interaction with weapons
                 if (currentClosest is WeaponInteractable)
                 {
-                    Debug.Log("No puedes recoger armas mientras llevas un paquete.");
+                    MessageUIManager.Instance.ShowMessage("No puedes recoger armas mientras llevas un paquete.");
                     return;
                 }
             }
@@ -102,14 +102,14 @@ public class PlayerInteraction : MonoBehaviour
                 // If carrying a weapon, prevent interaction with other weapons
                 if (currentClosest is WeaponInteractable)
                 {
-                    Debug.Log("Ya llevas un arma.");
+                    MessageUIManager.Instance.ShowMessage("Ya llevas un arma.");
                     return;
                 }
 
                 // If a weapon is being held, prevent interaction with packages
                 if (carriedWeapon.isBeingHeld && currentClosest is PackageInteractable)
                 {
-                    Debug.Log("No puedes recoger paquetes mientras llevas un arma equipada.");
+                    MessageUIManager.Instance.ShowMessage("No puedes recoger paquetes mientras llevas un arma equipada.");
                     return;
                 }
             }
@@ -158,9 +158,6 @@ public class PlayerInteraction : MonoBehaviour
             {
                 carriedPackage.Drop();
                 ClearCarriedPackage();
-
-                // Notify animator
-                animator.SetBool("isCarryingPackage", false);
                 return;
             }
 
@@ -172,9 +169,6 @@ public class PlayerInteraction : MonoBehaviour
                     carriedWeapon.Drop();
                     ClearCarriedWeapon();
                     weaponIconUI.UpdateWeaponIcon(null, false, false);
-
-                    // Notify animator
-                    animator.SetInteger("CurrentWeapon", 0);
                 }
             }
         }
@@ -207,7 +201,7 @@ public class PlayerInteraction : MonoBehaviour
             {
                 if (carriedPackage != null)
                 {
-                    Debug.Log("No puedes equipar el arma mientras sostienes un paquete.");
+                    MessageUIManager.Instance.ShowMessage("No puedes equipar el arma mientras sostienes un paquete.");
                     return;
                 }
                 carriedWeapon.EquipWeapon();
@@ -329,6 +323,9 @@ public class PlayerInteraction : MonoBehaviour
     public void ClearCarriedPackage()
     {
         carriedPackage = null;
+
+        // Notify animator
+        animator.SetBool("isCarryingPackage", false);
     }
 
     // Stores reference to the weapon currently being carried
@@ -348,5 +345,8 @@ public class PlayerInteraction : MonoBehaviour
     {
         carriedWeapon = null;
         weaponIconUI.UpdateWeaponIcon(null, false, false);
+
+        // Notify animator
+        animator.SetInteger("CurrentWeapon", 0);
     }
 }

@@ -14,6 +14,8 @@ public class DeliveryMission
 
     public DeliveryFlag flag;
 
+    public bool IsForced { get; private set; }
+
     [Header("Participants")]
     public PackageInteractable package;
     public NPCDeliveryGiver giver;
@@ -84,8 +86,8 @@ public class DeliveryMission
 
         // Calculate time penalty
         float extraTime = Mathf.Max(0, deliveryTime - 180f);
-        int timeSteps = Mathf.FloorToInt(extraTime / 10f);
-        timePenalty = timeSteps * 5;
+        int timeSteps = Mathf.FloorToInt(extraTime / 15f);
+        timePenalty = Mathf.Clamp(timeSteps * 5, 0, 50);
 
         // Calculate integrity penalty
         float lostIntegrity = 1f - Integrity;
@@ -94,5 +96,10 @@ public class DeliveryMission
 
         // Calculate final reward
         finalReward = Mathf.Max(0, baseReward - timePenalty - integrityPenalty);
+    }
+
+    public void MarkAsForced()
+    {
+        IsForced = true;
     }
 }

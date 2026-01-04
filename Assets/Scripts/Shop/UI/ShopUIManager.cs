@@ -172,13 +172,20 @@ public class ShopUIManager : MonoBehaviour
             return;
         }
 
-        // Enable button only if the player has enough money
-        buyButton.interactable = wallet.HasEnough(selectedItem.price);
+        bool hasMoney = wallet.HasEnough(selectedItem.price);
+        bool hasSpace = inventory.CanAddItem(selectedItem);
+
+        // Enable button only if the player has enough money and space
+        buyButton.interactable = hasMoney && hasSpace;
     }
 
     public void BuySelectedItem()
     {
         if (selectedItem == null)
+            return;
+
+        // Check if there's available space
+        if (!inventory.CanAddItem(selectedItem))
             return;
 
         // Attempt to spend money

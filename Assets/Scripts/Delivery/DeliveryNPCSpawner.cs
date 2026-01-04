@@ -66,6 +66,16 @@ public class DeliveryNPCSpawner : MonoBehaviour
         return valid != null && valid.Count > 0;
     }
 
+    public bool HasGiverForFlag(DeliveryFlag flag)
+    {
+        return giverPrefabs.Exists(giver => giver.flag == flag);
+    }
+
+    public bool HasReceiverForFlag(DeliveryFlag flag)
+    {
+        return receiverPrefabs.Exists(receiver => receiver.flag == flag);
+    }
+
     // Get all giver prefabs that are valid for the current game progress
     private List<NPCDeliveryGiver> GetValidGiversForCurrentFlag()
     {
@@ -132,6 +142,71 @@ public class DeliveryNPCSpawner : MonoBehaviour
 
         // Choose a random receiver prefab
         var chosen = valid[Random.Range(0, valid.Count)];
+        var receiver = Instantiate(chosen, transform.position, transform.rotation);
+
+        receiver.AssignMission(mission);
+        RegisterSpawnedNPC(receiver.gameObject);
+
+        // Assign the spawned receiver NPC to the mission
+        mission.receiver = receiver;
+    }
+
+    public void ForceSpawnGiver(DeliveryMission mission, DeliveryFlag forcedFlag)
+    {
+        if (reservedMission != mission)
+        {
+            Debug.LogError($"[Delivery NPC Spawner] {name} failed: can't force spawn NPC for this mission");
+            return;
+        }
+
+        if (giverPrefabs == null || giverPrefabs.Count == 0)
+        {
+            Debug.LogError($"[Delivery NPC Spawner] {name} failed: called with no giver prefabs");
+            return;
+        }
+
+        // Choose the right giver prefab
+        var chosen = giverPrefabs.Find(giver => giver.flag == forcedFlag);
+
+        if (chosen == null)
+        {
+            Debug.LogError($"[Delivery NPC Spawner] {name} has no giver prefab with flag {forcedFlag}");
+            return;
+        }
+
+        var giver = Instantiate(chosen, transform.position, transform.rotation);
+
+        giver.AssignMission(mission);
+        RegisterSpawnedNPC(giver.gameObject);
+
+        // Assign the spawned giver NPC and its associated flag to the mission
+        mission.giver = giver;
+        mission.flag = forcedFlag;
+    }
+
+    public void ForceSpawnReceiver(DeliveryMission mission)
+    {
+        if (reservedMission != mission)
+        {
+            Debug.LogError($"[Delivery NPC Spawner] {name} failed: can't force spawn NPC for this mission");
+            return;
+        }
+
+        if (receiverPrefabs == null || receiverPrefabs.Count == 0)
+        {
+            Debug.LogError($"[Delivery NPC Spawner] {name} failed: called with no receiver prefabs");
+            return;
+        }
+
+        // Choose the right receiver prefab
+        var chosen = receiverPrefabs.Find(receiver => receiver.flag == mission.flag);
+
+        if (chosen == null)
+        {
+            Debug.LogError($"[Delivery NPC Spawner] {name} has no receiver prefab with flag {mission.flag}");
+            return;
+        }
+
         var receiver = Instantiate(chosen, transform.position, transform.rotation);
 
         receiver.AssignMission(mission);

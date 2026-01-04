@@ -3,10 +3,11 @@ using UnityEngine;
 public class NPCDeliveryGiver : Interactable
 {
     public DeliveryFlag flag;
-
     public GameObject[] packagePrefabs;
 
     private DeliveryMission mission;
+
+    protected override bool WaitForMessage => true;
 
     public void AssignMission(DeliveryMission mission)
     {
@@ -15,8 +16,6 @@ public class NPCDeliveryGiver : Interactable
 
     protected override void OnInteract()
     {
-        isInteracted = false;
-
         // Choose a random package prefab and instantiate it near the giver
         var prefab = packagePrefabs[Random.Range(0, packagePrefabs.Length)];
         var package = Instantiate(prefab, transform.position + Vector3.up, Quaternion.identity).GetComponent<PackageInteractable>();

@@ -11,6 +11,11 @@ public class Inventory : MonoBehaviour
     private InventoryItemInstance equippedVest;
     private InventoryItemInstance equippedBoots;
 
+    [Header("Limits")]
+    public const int maxVests = 8;
+    public const int maxBoots = 8;
+    public const int maxConsumables = 16;
+
     private GameObject player;
 
     public InventoryItemInstance EquippedVest => equippedVest;
@@ -21,8 +26,45 @@ public class Inventory : MonoBehaviour
         player = gameObject;
     }
 
+    public bool HasAnyItem()
+    {
+        return ownedEquipment.Count > 0 || ownedConsumables.Count > 0;
+    }
+
+    public bool CanAddItem(InventoryItem item)
+    {
+        if (item == null) return false;
+
+        if (item is EquipmentItem equipment)
+        {
+            // Count equipable items depending in the item type
+            int count = 0;
+            foreach (var owned in ownedEquipment)
+            {
+                if (owned.data is EquipmentItem ownedData && ownedData.slot == equipment.slot)
+                    count++;
+            }
+
+            // Check if there's an available slot
+            if (equipment.slot == EquipmentSlot.Vest)
+                return count < maxVests;
+            if (equipment.slot == EquipmentSlot.Boots)
+                return count < maxBoots;
+        }
+        else if (item is ConsumableItem)
+        {
+            // Check if there's an available slot
+            return ownedConsumables.Count < maxConsumables;
+        }
+
+        return false;
+    }
+
     public void AddItem(InventoryItem item)
     {
+        if (!CanAddItem(item))
+            return;
+
         if (item == null)
             return;
 

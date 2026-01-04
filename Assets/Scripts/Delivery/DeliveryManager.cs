@@ -5,6 +5,8 @@ public class DeliveryManager : MonoBehaviour
 {
     public static DeliveryManager Instance;
 
+    public static event System.Action OnDeliveryCompleted;
+
     [Header("Data")]
     private readonly List<DeliveryMission> generatedMissions = new();
     private readonly List<DeliveryNPCSpawner> registeredSpawners = new();
@@ -22,16 +24,11 @@ public class DeliveryManager : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
-    {
-        // Delay mission generation to allow spawner registration
-        Invoke(nameof(GenerateMissions), 1f);
-    }
-
     public void RegisterDeliveryNPCSpawner(DeliveryNPCSpawner spawner)
     {
         // Register a new NPC spawner
-        registeredSpawners.Add(spawner);
+        if (!registeredSpawners.Contains(spawner))
+            registeredSpawners.Add(spawner);
     }
 
     public void GenerateMissions()
@@ -80,6 +77,7 @@ public class DeliveryManager : MonoBehaviour
         // Randomly select a receiver spawner
         var reservedReceiverSpawner = availableReceiverSpawners[Random.Range(0, availableReceiverSpawners.Count)];
 
+        // Create mission
         var mission = new DeliveryMission(reservedGiverSpawner, reservedReceiverSpawner);
 
         // Reserve spawners for the mission
@@ -97,6 +95,86 @@ public class DeliveryManager : MonoBehaviour
         }
 
         reservedGiverSpawner.SpawnGiver(mission);
+
+        generatedMissions.Add(mission);
+
+        // Add icons to the map
+        MapUIManager.Instance.RegisterGiverGenerated(mission, reservedGiverSpawner.transform);
+        MapUIManager.Instance.RegisterReceiverGenerated(mission, reservedReceiverSpawner.transform);
+
+        return true;
+    }
+
+    public bool GenerateForcedMission(DeliveryFlag forcedFlag)
+    {
+        if (registeredSpawners.Count < 2)
+        {
+            Debug.Log("[DeliveryManager] Not enough spawners for forced mission");
+            return false;
+        }
+
+        // Find valid giver spawners with same flag
+        var availableGiverSpawners = new List<DeliveryNPCSpawner>();
+
+        foreach (var spawner in registeredSpawners)
+        {
+            if (!spawner.IsSelectable)
+                continue;
+
+            if (spawner.HasGiverForFlag(forcedFlag))
+                availableGiverSpawners.Add(spawner);
+        }
+
+        if (availableGiverSpawners.Count == 0)
+        {
+            Debug.Log($"[DeliveryManager] No giver found for forced flag {forcedFlag}");
+            return false;
+        }
+
+        // Pick random giver
+        var reservedGiverSpawner = availableGiverSpawners[Random.Range(0, availableGiverSpawners.Count)];
+
+        // Find valid receiver spawners with same flag
+        var availableReceiverSpawners = new List<DeliveryNPCSpawner>();
+
+        foreach (var spawner in registeredSpawners)
+        {
+            if (spawner == reservedGiverSpawner || !spawner.IsSelectable)
+                continue;
+
+            if (spawner.HasReceiverForFlag(forcedFlag))
+                availableReceiverSpawners.Add(spawner);
+        }
+
+        if (availableReceiverSpawners.Count == 0)
+        {
+            Debug.Log($"[DeliveryManager] No receiver found for forced flag {forcedFlag}");
+            return false;
+        }
+
+        // Pick random receiver
+        var reservedReceiverSpawner = availableReceiverSpawners[Random.Range(0, availableReceiverSpawners.Count)];
+
+        // Create mission
+        var mission = new DeliveryMission(reservedGiverSpawner, reservedReceiverSpawner);
+
+        // Reserve spawners for the mission
+        if (!reservedGiverSpawner.Reserve(mission))
+        {
+            Debug.Log("[Delivery Manager] Failed to reserve giver spawner for forced mission");
+            return false;
+        }
+
+        if (!reservedReceiverSpawner.Reserve(mission))
+        {
+            Debug.Log("[Delivery Manager] Failed to reserve receiver spawner for forced mission");
+            reservedGiverSpawner.Release(mission);
+            return false;
+        }
+
+        // Force giver spawner
+        mission.MarkAsForced();
+        reservedGiverSpawner.ForceSpawnGiver(mission, forcedFlag);
 
         generatedMissions.Add(mission);
 
@@ -127,7 +205,16 @@ public class DeliveryManager : MonoBehaviour
 
     public void ActivateMission(DeliveryMission mission, PackageInteractable package)
     {
-        mission.reservedReceiverSpawner.SpawnReceiver(mission);
+        if (mission.IsForced)
+        {
+            // Force spawning receiver
+            mission.reservedReceiverSpawner.ForceSpawnReceiver(mission);
+        }
+        else
+        {
+            // Spawn a regular receiver
+            mission.reservedReceiverSpawner.SpawnReceiver(mission);
+        }
 
         mission.package = package;
         mission.Activate();
@@ -157,5 +244,8 @@ public class DeliveryManager : MonoBehaviour
         MapUIManager.Instance.UnregisterReceiver(mission);
 
         generatedMissions.Remove(mission);
+
+        // Notify listeners
+        OnDeliveryCompleted?.Invoke();
     }
 }

@@ -1760,6 +1760,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconController: {fileID: 0}
+  interactionMessages:
+  - "Esto es perecible. Muy perecible. Si tardas m\xE1s de tres minutos en entregarlo,
+    todo se arruinar\xE1 y te descontar\xE1n bastante dinero. As\xED que sin desv\xEDos...
+    y sin pausas innecesarias para ir al ba\xF1o."
   flag: 1
   packagePrefabs:
   - {fileID: 8571525282877287095, guid: 229ebe10ad821b341a9b4b6449c0e16a, type: 3}

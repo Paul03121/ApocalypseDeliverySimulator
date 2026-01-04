@@ -6,6 +6,8 @@ public class NPCDeliveryReceiver : Interactable
 
     private DeliveryMission mission;
 
+    protected override bool WaitForMessage => true;
+
     public void AssignMission(DeliveryMission mission)
     {
         this.mission = mission;
@@ -13,8 +15,6 @@ public class NPCDeliveryReceiver : Interactable
 
     protected override void OnInteract()
     {
-        isInteracted = false;
-
         // Get player interaction component and package being carried
         var player = FindObjectOfType<PlayerInteraction>();
         var carried = player.GetCarriedPackage();

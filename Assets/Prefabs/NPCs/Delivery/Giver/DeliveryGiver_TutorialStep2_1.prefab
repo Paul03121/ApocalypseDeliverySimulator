@@ -1922,6 +1922,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconController: {fileID: 0}
+  interactionMessages:
+  - "Antes de que lo tomes, aviso: este paquete pesa como si estuviera lleno de ladrillos
+    y malas decisiones. Mientras lo cargues no podr\xE1s correr ni saltar, as\xED
+    que elige bien tu camino."
   flag: 1
   packagePrefabs:
   - {fileID: 1350345293842614662, guid: cc1c38a367829264c80c0872bb5759a2, type: 3}

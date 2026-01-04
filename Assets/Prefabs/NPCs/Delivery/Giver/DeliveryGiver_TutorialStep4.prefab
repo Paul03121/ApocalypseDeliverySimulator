@@ -354,6 +354,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconController: {fileID: 0}
+  interactionMessages:
+  - "Necesito que entregues este paquete a una persona importante. No es una entrega
+    com\xFAn, y no puede fallar.\nConf\xEDo en que entiendes la responsabilidad que
+    implica."
   flag: 3
   packagePrefabs:
   - {fileID: 2502037475432627411, guid: db15882c088b9384a9465d8e49b7442e, type: 3}

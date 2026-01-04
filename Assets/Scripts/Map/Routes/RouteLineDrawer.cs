@@ -7,7 +7,8 @@ public class RouteLineDrawer : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private RectTransform linesParent;
-    [SerializeField] private GameObject linePrefab;
+    [SerializeField] private GameObject firstLinePrefab;
+    [SerializeField] private GameObject standardLinePrefab;
 
     private readonly List<GameObject> activeLines = new();
 
@@ -23,10 +24,22 @@ public class RouteLineDrawer : MonoBehaviour
 
         Vector2 previous = MapUIManager.Instance.GetPlayerMapPosition();
 
-        foreach (var node in nodes)
+        for (int i = 0; i < nodes.Count; i++)
         {
-            Vector2 next = MapUIManager.Instance.WorldToMapPosition(node.worldTransform.position);
-            DrawLine(previous, next);
+            Vector2 next = MapUIManager.Instance.WorldToMapPosition(nodes[i].worldTransform.position);
+
+            // Choose a different line prefab for first line
+            GameObject linePrefab;
+            if (i == 0)
+                linePrefab = firstLinePrefab;
+            else
+                linePrefab = standardLinePrefab;
+
+            // Draw the line and keep the first one in the front
+            GameObject line = DrawLine(previous, next, linePrefab);
+            if (i > 0)
+                line.transform.SetAsFirstSibling();
+
             previous = next;
         }
     }
@@ -51,7 +64,7 @@ public class RouteLineDrawer : MonoBehaviour
     }
 
     // Draw a single line between two positions
-    private void DrawLine(Vector2 start, Vector2 end)
+    private GameObject DrawLine(Vector2 start, Vector2 end, GameObject linePrefab)
     {
         GameObject line = Instantiate(linePrefab, linesParent);
         activeLines.Add(line);
@@ -70,5 +83,7 @@ public class RouteLineDrawer : MonoBehaviour
         // Rotate the line to face the correct direction
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         rt.rotation = Quaternion.Euler(0f, 0f, angle);
+
+        return line;
     }
 }

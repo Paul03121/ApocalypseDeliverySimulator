@@ -4,7 +4,7 @@ using System;
 public class PlayerWallet : MonoBehaviour
 {
     [Header("Settings")]
-    [SerializeField] private int startingMoney = 50;
+    [SerializeField] private int startingMoney = 0;
 
     private int currentMoney;
 
