@@ -99,8 +99,8 @@ public class DeliveryManager : MonoBehaviour
         generatedMissions.Add(mission);
 
         // Add icons to the map
-        MapUIManager.Instance.RegisterGiverGenerated(mission, reservedGiverSpawner.transform);
-        MapUIManager.Instance.RegisterReceiverGenerated(mission, reservedReceiverSpawner.transform);
+        MapIconManager.Instance.RegisterIcon(mission, MapIconType.GiverActive, reservedGiverSpawner.transform);
+        MapIconManager.Instance.RegisterIcon(mission, MapIconType.ReceiverInactive, reservedReceiverSpawner.transform);
 
         return true;
     }
@@ -179,8 +179,8 @@ public class DeliveryManager : MonoBehaviour
         generatedMissions.Add(mission);
 
         // Add icons to the map
-        MapUIManager.Instance.RegisterGiverGenerated(mission, reservedGiverSpawner.transform);
-        MapUIManager.Instance.RegisterReceiverGenerated(mission, reservedReceiverSpawner.transform);
+        MapIconManager.Instance.RegisterIcon(mission, MapIconType.GiverActive, reservedGiverSpawner.transform);
+        MapIconManager.Instance.RegisterIcon(mission, MapIconType.ReceiverInactive, reservedReceiverSpawner.transform);
 
         return true;
     }
@@ -220,8 +220,11 @@ public class DeliveryManager : MonoBehaviour
         mission.Activate();
 
         // Update map icons
-        MapUIManager.Instance.SetGiverInactive(mission, mission.reservedGiverSpawner.transform);
-        MapUIManager.Instance.SetReceiverActive(mission, mission.reservedReceiverSpawner.transform);
+        MapIconManager.Instance.UnregisterIcon(mission, MapIconType.GiverActive);
+        MapIconManager.Instance.RegisterIcon(mission, MapIconType.GiverInactive, mission.reservedGiverSpawner.transform);
+
+        MapIconManager.Instance.UnregisterIcon(mission, MapIconType.ReceiverInactive);
+        MapIconManager.Instance.RegisterIcon(mission, MapIconType.ReceiverActive, mission.reservedReceiverSpawner.transform);
     }
 
     public void CompleteMission(DeliveryMission mission)
@@ -240,8 +243,8 @@ public class DeliveryManager : MonoBehaviour
         mission.reservedReceiverSpawner.Release(mission);
 
         // Remove map icons
-        MapUIManager.Instance.UnregisterGiver(mission);
-        MapUIManager.Instance.UnregisterReceiver(mission);
+        MapIconManager.Instance.UnregisterIcon(mission, MapIconType.GiverInactive);
+        MapIconManager.Instance.UnregisterIcon(mission, MapIconType.ReceiverActive);
 
         generatedMissions.Remove(mission);
 

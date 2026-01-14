@@ -6,7 +6,7 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
     public float sensitivity = 100f;
     public Transform playerBody;
     public float distance = 5f;
-    public float height = 0.5f;
+    public float height = 1.5f;
     public float maxRotationAngle = 45f;
 
     [Header("Collision Settings")]
@@ -17,8 +17,8 @@ public class ThirdPersonFrontCameraController : MonoBehaviour
 
     [Header("Death Settings")]
     [SerializeField] private float deathMaxAngle = 40f;
-    [SerializeField] private float deathInputSpeed = 0.5f;
-    [SerializeField] private float deathDistance = 3f;
+    [SerializeField] private float deathInputSpeed = 0.2f;
+    [SerializeField] private float deathDistance = 3.5f;
     private bool isDeathView = false;
 
     private float xRotation = 0f;

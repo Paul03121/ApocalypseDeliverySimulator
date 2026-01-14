@@ -7,9 +7,13 @@ public class RouteManager : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Transform playerTransform;
+    [SerializeField] private RectTransform mainMapRouteLinesContainer;
+    [SerializeField] private RectTransform miniMapRouteLinesContainer;
 
     private List<RouteNode> currentRoute = new();
     private RouteAlgorithmType currentAlgorithm;
+
+    public bool HasActiveRoute => currentRoute != null && currentRoute.Count > 0;
 
     private void Awake()
     {
@@ -27,8 +31,6 @@ public class RouteManager : MonoBehaviour
         // Stop listenig for mission node visit events
         DeliveryMission.OnNodeVisited -= HandleNodeVisited;
     }
-
-    public bool HasActiveRoute => currentRoute != null && currentRoute.Count > 0;
 
     // Build and draw a new route using the selected algorithm
     public void CreateRoute(List<DeliveryMission> missions, RouteAlgorithmType algorithm)
@@ -50,7 +52,12 @@ public class RouteManager : MonoBehaviour
         if (!HasActiveRoute)
             return;
 
-        RouteLineDrawer.Instance.DrawRoute(currentRoute);
+        // Always draw route in minimap
+        RouteLineDrawer.Instance.DrawRoute(currentRoute, miniMapRouteLinesContainer, true);
+
+        // Draw route in main map only if it's open
+        if (GameStateManager.Instance.IsMap)
+            RouteLineDrawer.Instance.DrawRoute(currentRoute, mainMapRouteLinesContainer, false);
     }
 
     // Clear the current route and its visual representation
@@ -109,7 +116,7 @@ public class RouteManager : MonoBehaviour
             else
             {
                 // Required for real-time minimap updates
-                RouteLineDrawer.Instance.DrawRoute(currentRoute);
+                RouteLineDrawer.Instance.DrawRoute(currentRoute, miniMapRouteLinesContainer, true);
             }
         }
         else
@@ -123,6 +130,6 @@ public class RouteManager : MonoBehaviour
     private void RecalculateRoute()
     {
         currentRoute = RouteAlgorithms.ApplyAlgorithm(currentRoute, currentAlgorithm, playerTransform.position);
-        RouteLineDrawer.Instance.DrawRoute(currentRoute);
+        RouteLineDrawer.Instance.DrawRoute(currentRoute, miniMapRouteLinesContainer, true);
     }
 }

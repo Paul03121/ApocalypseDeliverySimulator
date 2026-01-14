@@ -12,12 +12,8 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = -18f;
 
     [Header("Crouch Settings")]
-    public float crouchHeight = 0.99f;
+    public float crouchHeight = 1.4f;
     public float crouchTransitionSpeed = 20f;
-
-    [Header("Ground Check Settings")]
-    public float groundCheckRadius = 0.75f;
-    public LayerMask groundMask;
 
     [Header("Movement Abilities Controllers")]
     public bool runBlocked = false;
@@ -25,7 +21,7 @@ public class PlayerMovement : MonoBehaviour
     public bool crouchBlocked = false;
 
     [Header("Death Model Drop")]
-    [SerializeField] private float deathYPosition = -1.85f;
+    [SerializeField] private float deathYPosition = -0.85f;
 
     [Header("Speed Modifiers")]
     private float speedBonus = 0f;
@@ -34,14 +30,14 @@ public class PlayerMovement : MonoBehaviour
     private PlayerHealth playerHealth;
     private FirstPersonCameraController firstPersonCamera;
     private CharacterController controller;
-    private Animator animator;
+    [SerializeField] private Animator fpAnimator;
+    [SerializeField] private Animator tpAnimator;
 
     private Vector3 velocity;
     private float originalHeight;
     private float originalCenterY;
     private bool isMoving;
     private bool isCrouching = false;
-    private bool isGrounded;
     private bool wasGroundedLastFrame = false;
 
     [Header("Attack Rotation")]
@@ -75,10 +71,11 @@ public class PlayerMovement : MonoBehaviour
 
         originalHeight = controller.height;
         originalCenterY = controller.center.y;
+    }
 
-        animator = GetComponentInChildren<Animator>();
-        if (animator == null)
-            Debug.LogError("Animator component not found on Player's model");
+    void Start()
+    {
+        MapIconManager.Instance.RegisterIcon(this, MapIconType.Player, transform);
     }
 
     void Update()
@@ -90,7 +87,6 @@ public class PlayerMovement : MonoBehaviour
         if (GameStateManager.Instance.IsPaused || GameStateManager.Instance.IsGameOver)
             return;
 
-        GroundCheck();
         HandleCrouch();
         MovementAndJump();
 
@@ -120,18 +116,6 @@ public class PlayerMovement : MonoBehaviour
         isBlocked = false;
     }
 
-    void GroundCheck()
-    {
-        // Ground check using a small sphere near the bottom of the capsule
-        Vector3 origin = transform.position + Vector3.down * (controller.height / 2f);
-        float sphereRadius = controller.radius * groundCheckRadius;
-        isGrounded = Physics.CheckSphere(origin, sphereRadius, groundMask);
-
-        // Reset vertical velocity when grounded
-        if (isGrounded && velocity.y < 0f)
-            velocity.y = -2f;
-    }
-
     void HandleCrouch()
     {
         // Toggle crouch
@@ -143,19 +127,20 @@ public class PlayerMovement : MonoBehaviour
             firstPersonCamera.SetCrouchingState(isCrouching);
 
             // Notify animator
-            animator.SetBool("isCrouching", isCrouching);
+            fpAnimator.SetBool("isCrouching", isCrouching);
+            tpAnimator.SetBool("isCrouching", isCrouching);
         }
 
         // Set target height and center based on crouch state
         float targetHeight = isCrouching ? crouchHeight : originalHeight;
-        float targetCenterY = isCrouching ? -targetHeight / 2f : originalCenterY;
+        float targetCenterY = isCrouching ? targetHeight / 2f : originalCenterY;
 
         // Smoothly interpolate controller height
         controller.height = Mathf.Lerp(controller.height, targetHeight, Time.deltaTime * crouchTransitionSpeed);
 
         // Smoothly interpolate controller center Y
         Vector3 center = controller.center;
-        center.y = Mathf.Lerp(center.y, targetCenterY, Time.deltaTime * crouchTransitionSpeed);
+        center.y = Mathf.Lerp(controller.center.y, targetCenterY, Time.deltaTime * crouchTransitionSpeed);
         controller.center = center;
 
         // Handle model rotation while crouching to match animation
@@ -195,23 +180,27 @@ public class PlayerMovement : MonoBehaviour
             else
                 animSpeed = 0.5f;   // Walk
         }
-        animator.SetFloat("Speed", animSpeed, 0.1f, Time.deltaTime);
+        fpAnimator.SetFloat("Speed", animSpeed, 0.1f, Time.deltaTime);
+        tpAnimator.SetFloat("Speed", animSpeed, 0.1f, Time.deltaTime);
 
         // Jump logic
         bool jumpPressed = Input.GetKeyDown(KeyCode.Space);
         bool jumpHeld = Input.GetKey(KeyCode.Space);
-        bool justLanded = isGrounded && !wasGroundedLastFrame;
+        bool justLanded = controller.isGrounded && !wasGroundedLastFrame;
 
         // Normal jump (GetKeyDown) OR auto-jump when landing while holding Space
-        if ((!jumpBlocked && isGrounded && jumpPressed && !isCrouching) ||
+        if ((!jumpBlocked && controller.isGrounded && jumpPressed && !isCrouching) ||
             (!jumpBlocked && justLanded && jumpHeld && !isCrouching))
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
             // Notify animator
-            animator.SetTrigger("JumpTrigger");
+            fpAnimator.SetTrigger("JumpTrigger");
+            tpAnimator.SetTrigger("JumpTrigger");
+
             // Force animation reboot for multiple jumps
-            animator.Play("Jump", -1, 0f);
+            fpAnimator.Play("Jump", -1, 0f);
+            tpAnimator.Play("Jump", -1, 0f);
         }
 
         // Apply gravity
@@ -221,7 +210,7 @@ public class PlayerMovement : MonoBehaviour
         controller.Move((horizontalVelocity + Vector3.up * velocity.y) * Time.deltaTime);
 
         // Store grounded state for next frame
-        wasGroundedLastFrame = isGrounded;
+        wasGroundedLastFrame = controller.isGrounded;
     }
 
     public void AddSpeedBonus(float amount)
@@ -235,34 +224,24 @@ public class PlayerMovement : MonoBehaviour
         speedBonus = Mathf.Max(0, speedBonus);
     }
 
-    void OnDrawGizmosSelected()
-    {
-        if (!controller) return;
-
-        // Visualize ground check sphere
-        Gizmos.color = Color.yellow;
-        Vector3 origin = transform.position + Vector3.down * (controller.height / 2f);
-        Gizmos.DrawWireSphere(origin, controller.radius * groundCheckRadius);
-    }
-
     private void HandleCrouchRotation()
     {
         if (!isCrouching)
         {
             // Reset rotation when not crouching
-            animator.transform.localRotation = Quaternion.Lerp(animator.transform.localRotation, Quaternion.identity, Time.deltaTime * 10f);
+            fpAnimator.transform.localRotation = Quaternion.Lerp(fpAnimator.transform.localRotation, Quaternion.identity, Time.deltaTime * 10f);
             return;
         }
 
         // Get current speed from animator
-        float speedParam = animator.GetFloat("Speed");
+        float speedParam = fpAnimator.GetFloat("Speed");
 
         float normalizedSpeed = Mathf.Clamp01(speedParam * 2f);
         float targetYRotation = Mathf.Lerp(15f, 35f, normalizedSpeed);
         Quaternion targetRotation = Quaternion.Euler(0f, targetYRotation, 0f);
 
         // Rotate model
-        animator.transform.localRotation = Quaternion.Lerp(animator.transform.localRotation, targetRotation, Time.deltaTime * 10f);
+        fpAnimator.transform.localRotation = Quaternion.Lerp(fpAnimator.transform.localRotation, targetRotation, Time.deltaTime * 10f);
     }
 
     private void HandleAttackRotation()
@@ -271,7 +250,7 @@ public class PlayerMovement : MonoBehaviour
         Quaternion targetRotation = isAttackRotationActive ? Quaternion.Euler(0f, attackAngle, 0f) : Quaternion.identity;
 
         // Rotate model
-        animator.transform.localRotation = Quaternion.Lerp(animator.transform.localRotation, targetRotation, Time.deltaTime * 10f);
+        fpAnimator.transform.localRotation = Quaternion.Lerp(fpAnimator.transform.localRotation, targetRotation, Time.deltaTime * 10f);
     }
 
     public void StartAttackRotation()
@@ -291,7 +270,7 @@ public class PlayerMovement : MonoBehaviour
 
     IEnumerator DeathModelDrop()
     {
-        Transform model = animator.transform;
+        Transform model = tpAnimator.transform;
 
         Vector3 startPos = model.localPosition;
         Vector3 endPos = new(startPos.x, deathYPosition, startPos.z);

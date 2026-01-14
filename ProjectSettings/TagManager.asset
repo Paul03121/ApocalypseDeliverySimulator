@@ -15,10 +15,10 @@ TagManager:
   - Interactable
   - NPC
   - Enemy
-  - InventoryPlayer
-  - 
-  - 
-  - 
+  - PlayerInventory
+  - Player
+  - PlayerModel_FP
+  - PlayerModel_TP
   - 
   - 
   - 

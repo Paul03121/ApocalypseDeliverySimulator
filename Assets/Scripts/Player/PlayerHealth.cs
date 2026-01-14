@@ -12,7 +12,8 @@ public class PlayerHealth : MonoBehaviour
 
     private float currentHealth;
 
-    private Animator animator;
+    [Header("References")]
+    [SerializeField]  private Animator tpAnimator;
 
     public float MaxHealth => baseMaxHealth + bonusMaxHealth;
     public float CurrentHealth => currentHealth;
@@ -30,9 +31,6 @@ public class PlayerHealth : MonoBehaviour
     {
         // Initialize health to full at start
         currentHealth = MaxHealth;
-
-        // Get animator component
-        animator = GetComponentInChildren<Animator>();
     }
 
     // Applies damage to the player
@@ -81,10 +79,10 @@ public class PlayerHealth : MonoBehaviour
         OnPlayerDeathStarted?.Invoke();
 
         // Update animator mode
-        animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+        tpAnimator.updateMode = AnimatorUpdateMode.UnscaledTime;
 
         // Notify animator
-        animator.SetTrigger("isDeath");
+        tpAnimator.SetTrigger("isDeath");
 
         Time.timeScale = 0;
         Cursor.lockState = CursorLockMode.None;

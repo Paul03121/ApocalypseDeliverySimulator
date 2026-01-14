@@ -10,7 +10,7 @@ public class NPCShopkeeper : Interactable
 
     private void Start()
     {
-        MapUIManager.Instance.RegisterShop(this, transform);
+        MapIconManager.Instance.RegisterIcon(this, MapIconType.Shop, transform);
     }
 
     protected override void OnInteract()

@@ -25,14 +25,6 @@ public class MapUIManager : MonoBehaviour
     [Header("Map Drag")]
     [SerializeField] private float dragSpeed = 1f;
 
-    [Header("Map Icons")]
-    [SerializeField] private GameObject playerIconPrefab;
-    [SerializeField] private GameObject shopIconPrefab;
-    [SerializeField] private GameObject giverActiveIconPrefab;
-    [SerializeField] private GameObject giverInactiveIconPrefab;
-    [SerializeField] private GameObject receiverInactiveIconPrefab;
-    [SerializeField] private GameObject receiverActiveIconPrefab;
-
     [Header("Routes")]
     [SerializeField] private Button heuristicRouteButton;
     [SerializeField] private Button optimalRouteButton;
@@ -46,8 +38,7 @@ public class MapUIManager : MonoBehaviour
     private PlayerHealth playerHealth;
     private bool isBlocked = false;
 
-    // Active map icons indexed by (owner, type)
-    private readonly Dictionary<(object, MapIconType), MapIcon> activeIcons = new();
+    private readonly Dictionary<(object, MapIconType), RectTransform> renderedIcons = new();
 
     private void Awake()
     {
@@ -58,9 +49,20 @@ public class MapUIManager : MonoBehaviour
             Debug.LogError("PlayerHealth not found in scene");
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        RegisterPlayer();
+        MapIconManager.Instance.OnIconsChanged += RefreshIcons;
+
+        playerHealth.OnPlayerDeathStarted += HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded += HandlePlayerDeathEnded;
+    }
+
+    private void OnDisable()
+    {
+        MapIconManager.Instance.OnIconsChanged -= RefreshIcons;
+
+        playerHealth.OnPlayerDeathStarted -= HandlePlayerDeathStarted;
+        playerHealth.OnPlayerDeathEnded -= HandlePlayerDeathEnded;
     }
 
     private void Update()
@@ -99,16 +101,23 @@ public class MapUIManager : MonoBehaviour
         }
     }
 
-    void OnEnable()
+    private void LateUpdate()
     {
-        playerHealth.OnPlayerDeathStarted += HandlePlayerDeathStarted;
-        playerHealth.OnPlayerDeathEnded += HandlePlayerDeathEnded;
-    }
+        if (!GameStateManager.Instance.IsMap)
+            return;
 
-    void OnDisable()
-    {
-        playerHealth.OnPlayerDeathStarted -= HandlePlayerDeathStarted;
-        playerHealth.OnPlayerDeathEnded -= HandlePlayerDeathEnded;
+        // Update position of each rendered icon
+        foreach (var pair in MapIconManager.Instance.Icons)
+        {
+            // Skip icons that are not rendered in this map
+            if (!renderedIcons.TryGetValue(pair.Key, out var rt))
+                continue;
+
+            MapIconData data = pair.Value;
+
+            Vector2 mapPos = WorldToMapPosition(data.target.position);
+            rt.anchoredPosition = mapPos;
+        }
     }
 
     private void HandlePlayerDeathStarted()
@@ -240,107 +249,64 @@ public class MapUIManager : MonoBehaviour
         return WorldToMapPosition(playerTransform.position);
     }
 
-    public void CenterMapOnPlayer(bool clamp = true)
+    public void CenterMapOnPlayer()
     {
         Vector2 playerMapPos = GetPlayerMapPosition();
-
         mapContent.anchoredPosition = -playerMapPos * currentZoom;
-
-        if (clamp)
-            ClampMapPosition();
+        ClampMapPosition();
     }
 
-    public void RegisterPlayer()
+    private void RefreshIcons()
     {
-        if (playerTransform == null)
+        // Get icon data from the icon manager
+        var sourceIcons = MapIconManager.Instance.Icons;
+
+        // Create missing icons
+        foreach (var pair in sourceIcons)
         {
-            Debug.LogError("MapUIManager: PlayerTransform not assigned");
-            return;
+            // Skip icons already rendered
+            if (renderedIcons.ContainsKey(pair.Key))
+                continue;
+
+            MapIconData data = pair.Value;
+
+            // Instantiate icon prefab
+            GameObject iconGO = Instantiate(data.prefab, iconsParent);
+            RectTransform rt = iconGO.GetComponent<RectTransform>();
+
+            renderedIcons.Add(pair.Key, rt);
         }
 
-        CreateIcon(this, MapIconType.Player, playerIconPrefab, playerTransform);
-    }
+        // Collect icons that no longer exist
+        var toRemove = new List<(object, MapIconType)>();
 
-    public void RegisterShop(object shop, Transform shopTransform)
-    {
-        CreateIcon(shop, MapIconType.Shop, shopIconPrefab, shopTransform);
-    }
+        // Mark icons for removing
+        foreach (var key in renderedIcons.Keys)
+        {
+            if (!sourceIcons.ContainsKey(key))
+                toRemove.Add(key);
+        }
 
-    public void UnregisterShop(object shop)
-    {
-        RemoveIcon(shop, MapIconType.Shop);
-    }
-
-    public void RegisterGiverGenerated(object mission, Transform giver)
-    {
-        CreateIcon(mission, MapIconType.GiverActive, giverActiveIconPrefab, giver);
-    }
-
-    public void SetGiverInactive(object mission, Transform giver)
-    {
-        RemoveIcon(mission, MapIconType.GiverActive);
-        CreateIcon(mission, MapIconType.GiverInactive, giverInactiveIconPrefab, giver);
-    }
-
-    public void UnregisterGiver(object mission)
-    {
-        RemoveIcon(mission, MapIconType.GiverInactive);
-    }
-
-    public void RegisterReceiverGenerated(object mission, Transform receiver)
-    {
-        CreateIcon(mission, MapIconType.ReceiverInactive, receiverInactiveIconPrefab, receiver);
-    }
-
-    public void SetReceiverActive(object mission, Transform receiver)
-    {
-        RemoveIcon(mission, MapIconType.ReceiverInactive);
-        CreateIcon(mission, MapIconType.ReceiverActive, receiverActiveIconPrefab, receiver);
-    }
-
-    public void UnregisterReceiver(object mission)
-    {
-        RemoveIcon(mission, MapIconType.ReceiverActive);
-    }
-
-    private void CreateIcon(object owner, MapIconType type, GameObject prefab, Transform target)
-    {
-        var key = (owner, type);
-
-        // Prevent duplicate icons
-        if (activeIcons.ContainsKey(key))
-            return;
-
-        GameObject iconObject = Instantiate(prefab, iconsParent);
-        MapIcon icon = iconObject.GetComponent<MapIcon>();
-
-        icon.target = target;
-        icon.rectTransform = iconObject.GetComponent<RectTransform>();
-
-        activeIcons.Add(key, icon);
+        // Remove icons
+        foreach (var key in toRemove)
+        {
+            Destroy(renderedIcons[key].gameObject);
+            renderedIcons.Remove(key);
+        }
 
         // Ensure player icon is always on top
         BringPlayerIconToFront();
     }
 
-    private void RemoveIcon(object owner, MapIconType type)
-    {
-        var key = (owner, type);
-
-        if (!activeIcons.TryGetValue(key, out MapIcon icon))
-            return;
-
-        Destroy(icon.gameObject);
-        activeIcons.Remove(key);
-    }
-
     private void BringPlayerIconToFront()
     {
-        var key = (this, MapIconType.Player);
-
-        if (activeIcons.TryGetValue(key, out MapIcon playerIcon))
+        foreach (var pair in renderedIcons)
         {
-            playerIcon.rectTransform.SetAsLastSibling();
+            if (pair.Key.Item2 == MapIconType.Player)
+            {
+                pair.Value.SetAsLastSibling();
+                return;
+            }
         }
     }
 

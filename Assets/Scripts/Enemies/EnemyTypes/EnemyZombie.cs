@@ -10,9 +10,9 @@ public class EnemyZombie : EnemyBase
         attackRange = 2f;
         baseDamage = 10;
 
-        detectionRange = 5f;
+        detectionRange = 10f;
         wanderRange = 8f;
-        viewRange = 15f;
+        viewRange = 25f;
         viewAngle = 100f;
         wanderCooldown = 8f;
     }
