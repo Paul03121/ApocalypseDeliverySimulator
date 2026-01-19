@@ -51,7 +51,8 @@ public class MapUIManager : MonoBehaviour
 
     private void OnEnable()
     {
-        MapIconManager.Instance.OnIconsChanged += RefreshIcons;
+        if (MapIconManager.Instance != null)
+            MapIconManager.Instance.OnIconsChanged += RefreshIcons;
 
         playerHealth.OnPlayerDeathStarted += HandlePlayerDeathStarted;
         playerHealth.OnPlayerDeathEnded += HandlePlayerDeathEnded;
@@ -59,7 +60,8 @@ public class MapUIManager : MonoBehaviour
 
     private void OnDisable()
     {
-        MapIconManager.Instance.OnIconsChanged -= RefreshIcons;
+        if (MapIconManager.Instance != null)
+            MapIconManager.Instance.OnIconsChanged -= RefreshIcons;
 
         playerHealth.OnPlayerDeathStarted -= HandlePlayerDeathStarted;
         playerHealth.OnPlayerDeathEnded -= HandlePlayerDeathEnded;

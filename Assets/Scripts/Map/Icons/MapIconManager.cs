@@ -12,6 +12,7 @@ public enum MapIconType
     ReceiverInactive
 }
 
+[DefaultExecutionOrder(-100)]
 public class MapIconManager : MonoBehaviour
 {
     public static MapIconManager Instance { get; private set; }

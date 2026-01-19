@@ -32,12 +32,14 @@ public class MiniMapUIManager : MonoBehaviour
 
     private void OnEnable()
     {
-        MapIconManager.Instance.OnIconsChanged += RefreshIcons;
+        if (MapIconManager.Instance != null)
+            MapIconManager.Instance.OnIconsChanged += RefreshIcons;
     }
 
     private void OnDisable()
     {
-        MapIconManager.Instance.OnIconsChanged -= RefreshIcons;
+        if (MapIconManager.Instance != null)
+            MapIconManager.Instance.OnIconsChanged -= RefreshIcons;
     }
 
     private void LateUpdate()
